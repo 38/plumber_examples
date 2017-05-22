@@ -1,0 +1,249 @@
+#!/bin/zsh
+
+BUILDDIR=`pwd`/build
+INSTALLDIR=`pwd`/installed
+SOURCEDIR=`pwd`/source
+
+function print_help() {
+	echo "Initialize the Plumber Isolated Environment"
+	echo "--real[=<prefix>]       Use the real environment, if prefix is missing use Plumber at /"
+	echo "--javascript            Enable Javascript servlet support"
+	echo "--test                  Run test cases before we start the environment"
+	echo "--recompile             Recompile the code"
+	echo "--reconfigure           Reconfigure the Plumber source code"
+	echo "--reinstall             Reinstall the Plumber environment"
+	echo "--remove                Remove all the generated file"
+	echo "--plumber-commit=<tag>  Use the given version number of Plumber"
+	echo "--sync                  Sync the Plumber code"
+	echo "--shell=<shell-command> Instead of using zsh, use the given shell"
+	echo "--cc=<C-compiler>       Use the given C compiler rather than GCC"
+	echo "--cxx=<C++-compiler>    Use the given C++ compiler rather than G++"
+	echo "--log=<log-level>       Use the given log level for Plumber logging system"
+	echo "--optimized             Pass -O3 to the compiler"
+	echo "--help                  Show this help message"
+}
+
+function argv() {
+	if [ $# = 2 ] && [ x"$1" = "x--string" ]; then
+		echo $2 | awk -F= '{print $2}'
+	else
+		realpath $(eval "echo $(echo $1 | awk -F= '{print $2}')")
+	fi
+}
+
+CC=gcc
+CXX=g++
+LOG=6
+OPT=0
+shell=zsh
+
+if [ ! -e ${BUILDDIR}/plumber/Makefile ]
+then
+	reconfigure="yes"
+	recompile="yes"
+	reinstall="yes"
+fi
+
+if [ ! -e ${BUILDDIR}/plumber/bin/pscript ]
+then
+	recompile="yes"
+	reinstall="yes"
+fi
+
+if [ ! -e ${INSTALLDIR}/bin/pscript ]
+then
+	reinstall="yes"
+fi
+
+function parse_options() {
+	for arg in $@
+	do
+		case ${arg} in
+			--real )
+				realenv="/"
+				;;
+			--real=* )
+				realenv="$(argv ${arg})"
+				;;
+			--javascript ) 
+				javascript="yes"
+				;;
+			--reconfigure )
+				reconfigure="yes"
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--recompile )
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--reinstall )
+				reinstall="yes"
+				;;
+			--plumber-commit=* )
+				commit="$(argv --string ${arg})"
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--test )
+				runtest="yes"
+				;;
+			--remove )
+				remove="yes"
+				;;
+			--shell=* )
+				shell="$(argv --string ${arg})"
+				;;
+			--sync )
+				sync="yes"
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--cc=* )
+				CC="$(argv --string ${arg})"
+				reconfigure="yes"
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--cxx=* )
+				CXX="$(argv --string ${arg})"
+				reconfigure="yes"
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--log=* )
+				LOG="$(argv --string ${arg})"
+				reconfigure="yes"
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--optimized )
+				OPT=3
+				reconfigure="yes"
+				recompile="yes"
+				reinstall="yes"
+				;;
+			--help )
+				print_help
+				exit 0
+				;;
+			* )
+				echo "Invalid argument ${arg}"
+				print_help
+				exit 1
+		esac
+	done
+}
+
+parse_options $@
+
+function realenvinfo() {
+	echo -ne '\e[33m'
+	echo ""
+	echo "You are entering real plumber environment at ${realenv}"
+	echo "  To quit the environment, please exit current shell"
+	echo ""
+	echo "  Plumber Version                        `pscript --version  |& grep 'Libplumber' | awk -F': ' '{print $2}'`"
+	echo "  Plumber Service Script Interpreter     pscript  at `which pscript`"
+	echo "  Plumber Servlet Testbed                pstest   at `which pstest`"
+	echo "  Protocol Management Tool               protoman at `which protoman`"
+	echo ""
+	echo -ne '\e[0m'
+}
+
+if [ ! -z "${realenv}" ]
+then
+	LD_LIBRARY_PATH=${realenv}/lib PATH=${realenv}/bin:${PATH} ENVROOT=${realenv} REPOROOT=`pwd` realenvinfo
+	LD_LIBRARY_PATH=${realenv}/lib PATH=${realenv}/bin:${PATH} ENVROOT=${realenv} REPOROOT=`pwd` ${shell} || exit 1
+	exit 0
+fi
+
+if [ ! -z "${ENVROOT}" ]
+then
+	echo "You are already in the Isolated Plumber Environment!"
+	exit 1
+fi
+
+if [ "x${remove}" = "xyes" ]
+then
+	rm -rf build installed
+	exit 0
+fi
+
+if [ "x${javascript}" = "xyes" ]
+then
+	source/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
+	JS_PARAM=(-DPLUMBER_V8_PREFIX=${INSTALLDIR} -Dbuild_javascript=yes)
+fi
+
+if [ ! -z "${commit}" ]
+then
+	pushd ${SOURCEDIR}/plumber
+	git checkout ${commit} || exit 1
+	popd
+fi
+
+if [ "x${sync}" = "xyes" ]
+then
+	pushd ${SOURCEDIR}/plumber
+	git pull || exit 1
+	popd
+fi
+
+if [ "x${reconfigure}" = "xyes" ]
+then
+	mkdir -p ${BUILDDIR}/plumber || exit 1
+	pushd ${BUILDDIR}/plumber
+	O=${OPT} L=${LOG} CC=${CC} CXX=${CXX} cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} ${JS_PARAM} ${SOURCEDIR}/plumber || exit 1
+	popd
+fi
+
+if [ "x${recompile}" = "xyes" ]
+then
+	pushd ${BUILDDIR}/plumber
+	make || exit 1
+	popd
+fi
+
+if [ "x${runtest}" = "xyes" ]
+then
+	pushd ${BUILDDIR}/plumber
+	make test || exit 1
+	popd
+fi
+
+if [ "x${reinstall}" = "xyes" ]
+then
+	pushd ${BUILDDIR}/plumber
+	make install || exit 1
+	popd
+	LD_LIBRARY_PATH=${INSTALLDIR}/lib ${INSTALLDIR}/bin/protoman --update --yes prototypes/*.ptype || exit 1
+	LD_LIBRARY_PATH=${INSTALLDIR}/lib sh ${BUILDDIR}/plumber/install-prototype.sh || exit 1
+fi
+
+function show_info() {
+	echo -ne '\e[33m'
+	echo ""
+	echo "You are enetring Isolated Plumber Envrionment"
+	echo ""
+	echo "  To check if you are in the Plumber Isolated Environment, use command whereami"
+	echo "  To quit the environment, please exit current shell"
+	echo ""
+	echo "  Plumber Version                        `pscript --version  |& grep 'Libplumber' | awk -F': ' '{print $2}'`"
+	echo "  Plumber Service Script Interpreter     pscript  at `which pscript`"
+	echo "  Plumber Servlet Testbed                pstest   at `which pstest`"
+	echo "  Protocol Management Tool               protoman at `which protoman`"
+	echo ""
+	echo -ne '\e[0m'
+}
+
+cat > ${INSTALLDIR}/bin/whereami <<EOF
+#!/bin/sh
+echo "You are under Plumber Isolated Environment at $(pwd), to leave the environment, please exit current shell."
+EOF
+
+chmod +x ${INSTALLDIR}/bin/whereami
+
+LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
+
+LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1

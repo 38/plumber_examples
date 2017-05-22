@@ -1,0 +1,4 @@
+package plumber_example;
+
+/* The type make sure we  can remove all the types completely */
+type __package__ {}

@@ -1,0 +1,25 @@
+package plumber_example.typed_pipe;
+
+type InputValue1 {
+	plumber_example.__package__ __package__;
+	uint32  something_else;
+	uint32  value;
+};
+
+type InputValue2 {
+	plumber_example.__package__ __package__;
+	uint32  timestamp;
+	uint32  value;
+};
+
+type InputValue3 : InputValue2 {
+	plumber_example.__package__ __package__;
+	float   random;
+};
+
+type Value {
+	plumber_example.__package__ __package__;
+	uint32 picked_id;
+	uint32 picked_value;
+	uint32 zero;
+};

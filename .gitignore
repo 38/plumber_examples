@@ -1,0 +1,44 @@
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+#vim files
+*.swp
+*.swo
+*.swn
+*.swm
+
+#tags
+tags
+
+#unused files
+unused/*
+
+*.pyc
+
+servlet.mk
+
+Doxyfile
+
+lib/*/package_config.h
+tools/*/package_config.h
+
+install-prototype.sh
+
+build/*
+
+installed/*

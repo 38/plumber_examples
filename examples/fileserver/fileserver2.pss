@@ -1,0 +1,62 @@
+#!/home/haohou/bin/pscript
+
+include "config.pss"
+
+//define the file server
+fileserver = {
+	parse_req := "getpath" @[color = green];
+	dup_path  := "dup 2";
+	mime_type := "mime " + mime_type_file;
+	read_file := "read " + server_base_dir;
+	error     := "cat 3";
+	gen_res   := "response" @[color = green];
+	
+	read_file2 := "read .";
+	demux     := "select localhost:8080";
+	content_cat := "firstnonempty 2";
+	size_cat := "firstnonempty 2";
+	status_cat := "firstnonempty 2";
+
+	/* handle the request */
+	() -> "request" parse_req {
+		"path" -> "in" dup_path {
+			"out0" -> "path" mime_type "mime" -> "mime" gen_res;
+			"out1" -> "input" demux; 
+		};
+		"host" -> "selector" demux;
+	};
+
+	/* read file from disk */
+	demux {
+		"output_0" -> "path" read_file {
+			"content" -> "in0" content_cat;
+			"size"    -> "in0" size_cat;
+			"status"  -> "in0" status_cat;
+		};
+		"default" -> "path" read_file2 {
+			"content" -> "in1" content_cat;
+			"size"    -> "in1" size_cat;
+			"status"  -> "in1" status_cat;
+		};
+	};
+	
+	/* generate response */
+	{
+		content_cat "out" -> "content";
+		status_cat "out" -> "status";
+		size_cat "out" -> "size";
+	} gen_res "response" -> ();
+
+	/* handle errors */
+	{
+		parse_req "error" -> "in0";
+		read_file "error" -> "in1";
+		read_file2 "error" -> "in2";
+	} error "out" -> "error" gen_res;
+};
+
+/* dump the visualization graph */
+visualize fileserver >>> "/dev/stdout";
+
+/* then start the file server */
+start fileserver
