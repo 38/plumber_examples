@@ -1,8 +1,7 @@
 #!/bin/zsh
-
 BUILDDIR=`pwd`/build
 INSTALLDIR=`pwd`/installed
-SOURCEDIR=`pwd`/source
+SOURCEDIR=`pwd`/dependencies
 
 function print_help() {
 	echo "Initialize the Plumber Isolated Environment"
@@ -183,7 +182,7 @@ fi
 
 if [ "x${javascript}" = "xyes" ]
 then
-	source/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
+	${SOURCEDIR}/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
 	JS_PARAM=(-DPLUMBER_V8_PREFIX=${INSTALLDIR} -Dbuild_javascript=yes)
 fi
 
