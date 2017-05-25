@@ -1,5 +1,5 @@
 #Service related variables
-basedir = "/tmp/";  //the base dir of the server
+basedir = "./environment";  //the base dir of the server
 mime_type_file = basedir + "/mime.types";   //the mime.types file 
 server_base_dir = basedir + "/server_files"; //the server base dir
 #ssl_cert = basedir + "/cert.pem";
@@ -17,9 +17,9 @@ if (pipe.mem == undefined) insmod "mem_pipe";
 #pipe.tcp.port_80.ttl  = 240;      // time to live
 
 #Setup 8080 port
-if (pipe.tcp.port_8080 == undefined) insmod "tcp_pipe 8080";
-pipe.tcp.port_8080.size = 65536;
-pipe.tcp.port_8080.ttl = 240;
+if (pipe.tcp.port_8081 == undefined) insmod "tcp_pipe 8080";
+pipe.tcp.port_8081.size = 65536;
+pipe.tcp.port_8081.ttl = 240;
 
 #Setup the HTTPS port
 #if (pipe.tcp.port_443 == undefined && pipe.tls.pipe.tcp.port_443 == undefined)
