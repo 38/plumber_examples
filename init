@@ -13,13 +13,14 @@ function print_help() {
 	echo "--reconfigure           Reconfigure the Plumber source code"
 	echo "--reinstall             Reinstall the Plumber environment"
 	echo "--remove                Remove all the generated file"
-	echo "--plumber-commit=<tag>  Use the given version number of Plumber"
+	echo "--commit=<tag>          Use the given version number of Plumber"
 	echo "--sync                  Sync the Plumber code"
 	echo "--shell=<shell-command> Instead of using zsh, use the given shell"
 	echo "--cc=<C-compiler>       Use the given C compiler rather than GCC"
 	echo "--cxx=<C++-compiler>    Use the given C++ compiler rather than G++"
 	echo "--log=<log-level>       Use the given log level for Plumber logging system"
 	echo "--optimized             Pass -O3 to the compiler"
+	echo "--gproftools            Compile code with Google profiling tools"
 	echo "--help                  Show this help message"
 }
 
@@ -31,10 +32,13 @@ function argv() {
 	fi
 }
 
+function strip() {
+	echo $1 | sed 's/^[\t ]*//g' | sed 's/[\t ]*$//g'
+}
+
 CC=gcc
 CXX=g++
 LOG=6
-OPT=0
 shell=zsh
 
 if [ ! -e ${BUILDDIR}/plumber/Makefile ]
@@ -80,7 +84,7 @@ function parse_options() {
 			--reinstall )
 				reinstall="yes"
 				;;
-			--plumber-commit=* )
+			--commit=* )
 				commit="$(argv --string ${arg})"
 				recompile="yes"
 				reinstall="yes"
@@ -93,6 +97,13 @@ function parse_options() {
 				;;
 			--shell=* )
 				shell="$(argv --string ${arg})"
+				;;
+			--gproftools )
+				LIBS=$(strip "${LIBS} -lprofiler")
+				CFLAGS=$(strip "${CFLAGS} -DGPROFTOOLS")
+				reconfigure="yes"
+				recompile="yes"
+				reinstall="yes"
 				;;
 			--sync )
 				sync="yes"
@@ -118,7 +129,7 @@ function parse_options() {
 				reinstall="yes"
 				;;
 			--optimized )
-				OPT=3
+				OPT=4
 				reconfigure="yes"
 				recompile="yes"
 				reinstall="yes"
@@ -194,7 +205,7 @@ if [ "x${reconfigure}" = "xyes" ]
 then
 	mkdir -p ${BUILDDIR}/plumber || exit 1
 	pushd ${BUILDDIR}/plumber
-	O=${OPT} L=${LOG} CC=${CC} CXX=${CXX} cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} ${JS_PARAM} ${SOURCEDIR}/plumber || exit 1
+	O=${OPT} L=${LOG} CC=${CC} CXX=${CXX} LIBS=${LIBS} CFLAGS=${CFLAGS} cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} ${JS_PARAM} ${SOURCEDIR}/plumber || exit 1
 	popd
 fi
 

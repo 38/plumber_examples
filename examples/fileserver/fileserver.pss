@@ -4,26 +4,30 @@ include "config.pss"
 
 //define the file server
 fileserver = {
-	parse_req := "getpath" @[color = green];
-	dup_path  := "dup 2";
-	mime_type := "mime " + mime_type_file;
-	read_file := "read " + server_base_dir;
-	error     := "firstnonempty 2";
-	gen_res   := "response" @[color = green];
+	parsereq  := "getpath" @[color = green];
+	parsepath := "filesystem/parsepath --ext-name";
+	guessmime := "filesystem/mimetype " + mime_type_file;
+	readfile := "read " + server_base_dir;
+	error     := "dataflow/firstnonempty 2";
+	genres   := "response" @[color = green];
+	
+	path2str  := "typing/conversion/raw2str";
+	mkrawpath := "typing/conversion/str2raw";
+	mkrawmime := "typing/conversion/str2raw";
 
-	() -> "request" parse_req "path" -> "in" dup_path {
-		"out0" -> "path" mime_type "mime" -> "mime";
-		"out1" -> "path" read_file {
+	() -> "request" parsereq "path" -> "input" path2str "output" -> "origin" parsepath {
+		"extname" ->  "extname" guessmime "mimetype" -> "input" mkrawmime "output" -> "mime";
+		"relative" -> "input"   mkrawpath "output" -> "path" readfile {
 			"content" -> "content";
 			"size"    -> "size";
 			"status"  -> "status";
 		}
-	} gen_res "response" -> ();
+	} genres "response" -> ();
 
 	{
-		parse_req "error" -> "in0";
-		read_file "error" -> "in1";
-	} error "out" -> "error" gen_res;
+		parsereq "error" -> "in0";
+		readfile "error" -> "in1";
+	} error "out" -> "error" genres;
 };
 
 /* dump the visualization graph */

@@ -1,5 +1,5 @@
 SERVLETS=getpath mime read response select
-CFLAGS=-g -Wall -O3
+CFLAGS=-g -Wall -O3 -DLOG_LEVEL=0
 
 include ../../shared.mk
 
