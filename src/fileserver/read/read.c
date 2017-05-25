@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include <pstd.h>
-#include <types/file.h>
+#include <pstd/types/file.h>
 
 typedef struct {
 	const char* basedir;
