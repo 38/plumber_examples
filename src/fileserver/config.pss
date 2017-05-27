@@ -17,7 +17,7 @@ if (pipe.mem == undefined) insmod "mem_pipe";
 #pipe.tcp.port_80.ttl  = 240;      // time to live
 
 #Setup 8080 port
-if (pipe.tcp.port_8081 == undefined) insmod "tcp_pipe 8080";
+if (pipe.tcp.port_8081 == undefined) insmod "tcp_pipe 8081";
 pipe.tcp.port_8081.size = 65536;
 pipe.tcp.port_8081.ttl = 240;
 

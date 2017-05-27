@@ -7,12 +7,17 @@
 #include <string.h>
 #include <module/tls/api.h>
 
+#include <pstd/type.h>
 #include <pstd/types/string.h>
 typedef struct {
 	pipe_t request;
 	pipe_t path;
 	pipe_t host;
 	pipe_t error;
+
+	pstd_type_model_t*   type_model;
+	pstd_type_accessor_t path_token;
+	pstd_type_accessor_t host_token;
 } servlet_data_t;
 int init(uint32_t argc, char const* const* argv, void* data)
 {
@@ -20,15 +25,19 @@ int init(uint32_t argc, char const* const* argv, void* data)
 	(void) argv;
 	servlet_data_t* sd = (servlet_data_t*)data;
 	sd->request = pipe_define("request", PIPE_INPUT, NULL);
-	sd->path    = pipe_define("path", PIPE_OUTPUT, NULL);
+	sd->path    = pipe_define("path", PIPE_OUTPUT, "plumber/std/request_local/String");
 	sd->error   = pipe_define("error", PIPE_OUTPUT, NULL);
-	sd->host    = pipe_define("host", PIPE_OUTPUT, NULL);
+	sd->host    = pipe_define("host", PIPE_OUTPUT, "plumber/std/request_local/Stirng");
 
 	if(sd->request == (pipe_t)-1 || sd->path == (pipe_t)-1 || sd->error == (pipe_t)-1)
 	{
 		LOG_ERROR("Cannot initialize the servlet");
 		return -1;
 	}
+
+	sd->type_model = pstd_type_model_new();
+	sd->path_token = pstd_type_model_get_accessor(sd->type_model, sd->path, "token");
+	sd->host_token = pstd_type_model_get_accessor(sd->type_model, sd->host, "token");
 
 	return 0;
 }
@@ -82,7 +91,7 @@ static inline int _state_free(_state_t* state)
 	return 0;
 }
 
-int exec(void* data)
+int _exec(void* data)
 {
 	servlet_data_t* sd = (servlet_data_t*)data;
 	char buffer[4096];
@@ -207,6 +216,9 @@ int exec(void* data)
 	    pipe_cntl(sd->request, PIPE_CNTL_SET_FLAG, PIPE_PERSIST);
 
 
+	char itbuf[pstd_type_instance_size(sd->type_model)];
+	pstd_type_instance_t* inst = pstd_type_instance_new(sd->type_model, itbuf);
+
 	if(state->ps != OK)
 	{
 		pipe_write(sd->error, "400 Bad Request", 15);
@@ -214,21 +226,34 @@ int exec(void* data)
 	else
 	{
 		LOG_NOTICE("Incoming HTTP Request: %s", state->path);
-		pipe_write(sd->path, state->path, state->path_length);
+		//pipe_write(sd->path, state->path, state->path_length);
+		pstd_string_t* pstr = pstd_string_new(state->path_length + 1);
+		pstd_string_write(pstr, state->path, state->path_length);
+		scope_token_t st = pstd_string_commit(pstr);
+		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, sd->path_token, st); 
 	}
 
 	if(state->host[0])
-	    pipe_write(sd->host, state->host, strlen(state->host));
+	{
+	    //pipe_write(sd->host, state->host, strlen(state->host));
+		pstd_string_t* pstr = pstd_string_new(strlen(state->host) + 1);
+		pstd_string_write(pstr, state->host, strlen(state->host));
+		scope_token_t st = pstd_string_commit(pstr);
+		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, sd->host_token, st); 
+	}
 
 	if(new_state == 1)
 	    _state_free(state);
+
+	pstd_type_instance_free(inst);
 
 	return 0;
 }
 
 int unload(void* data)
 {
-	(void) data;
+	servlet_data_t* sd = (servlet_data_t*)data;
+	pstd_type_model_free(sd->type_model);
 	return 0;
 }
 SERVLET_DEF = {
@@ -236,6 +261,6 @@ SERVLET_DEF = {
 	.version = 0,
 	.size = sizeof(servlet_data_t),
 	.init = init,
-	.exec = exec,
+	.exec = _exec,
 	.unload = unload
 };

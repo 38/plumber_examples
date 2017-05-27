@@ -1,5 +1,5 @@
-SERVLETS=getpath read response select
-CFLAGS=-g -Wall -O3 -DLOG_LEVEL=0
+SERVLETS=getpath response select
+CFLAGS=-g -Wall -DLOG_LEVEL=0 -O3
 
 include ../../shared.mk
 

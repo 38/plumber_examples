@@ -7,27 +7,23 @@ fileserver = {
 	parsereq  := "getpath" @[color = green];
 	parsepath := "filesystem/parsepath --ext-name";
 	guessmime := "filesystem/mimetype " + mime_type_file;
-	readfile := "read " + server_base_dir;
-	error     := "dataflow/firstnonempty 2";
-	genres   := "response" @[color = green];
-	
-	path2str  := "typing/conversion/raw2str";
-	mkrawpath := "typing/conversion/str2raw";
-	mkrawmime := "typing/conversion/str2raw";
+	readfile :=  "filesystem/readfile " + server_base_dir;
+	error     := "dataflow/firstnonempty 4";
+	genres   := " response" @[color = green];
+	() -> "request" parsereq "path" -> "origin" parsepath {
+		"extname" ->  "extname" guessmime "mimetype" -> "mime";
+		"relative" -> "path" readfile "result" -> "file"
+	} genres "output" -> ();
 
-	() -> "request" parsereq "path" -> "input" path2str "output" -> "origin" parsepath {
-		"extname" ->  "extname" guessmime "mimetype" -> "input" mkrawmime "output" -> "mime";
-		"relative" -> "input"   mkrawpath "output" -> "path" readfile {
-			"content" -> "content";
-			"size"    -> "size";
-			"status"  -> "status";
-		}
-	} genres "response" -> ();
+	parsereq "error" -> "400" genres;
+	parsepath "__null__" -> "403" genres;
 
 	{
-		parsereq "error" -> "in0";
-		readfile "error" -> "in1";
-	} error "out" -> "error" genres;
+		parsereq  "__error__" -> "in0";
+		parsepath "__error__" -> "in1";
+		guessmime "__error__" -> "in2";
+		readfile  "__error__" -> "in3";
+	} error "out" -> "500" genres;
 };
 
 /* dump the visualization graph */
