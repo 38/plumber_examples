@@ -13,5 +13,10 @@ You can start the server by typing command
 
 	pscript fileserver.pss
 
+#How to try the server?
+Please go to http://localhost:8080, you should see the welcome page. You should able to
+put any other files to the ./environment/server\_files directory, and access it via the 
+server.
+
 #How to config the server?
 Please look into config.pss

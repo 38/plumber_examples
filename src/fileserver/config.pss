@@ -2,8 +2,6 @@
 basedir = "./environment";  //the base dir of the server
 mime_type_file = basedir + "/mime.types";   //the mime.types file 
 server_base_dir = basedir + "/server_files"; //the server base dir
-#ssl_cert = basedir + "/cert.pem";
-#ssl_key  = basedir + "/key.pem";
 
 #Initnialize the PSSM
 if (plumber.std == undefined) insmod "pssm";
@@ -11,37 +9,35 @@ if (plumber.std == undefined) insmod "pssm";
 #Initialize the ITC Modules
 if (pipe.mem == undefined) insmod "mem_pipe";
 
-#Setup 80 port
-#if (pipe.tcp.port_80 == undefined) insmod "tcp_pipe 80";
-#pipe.tcp.port_80.size = 65536;    //the connection pool size
-#pipe.tcp.port_80.ttl  = 240;      // time to live
-
 #Setup 8080 port
-if (pipe.tcp.port_8081 == undefined) insmod "tcp_pipe 8081";
-pipe.tcp.port_8081.size = 65536;
-pipe.tcp.port_8081.ttl = 240;
+if (pipe.tcp.port_8080 == undefined) insmod "tcp_pipe 8080";
+pipe.tcp.port_8080.size = 65536;
+pipe.tcp.port_8080.ttl = 240;
 
+/*
 #Setup the HTTPS port
-#if (pipe.tcp.port_443 == undefined && pipe.tls.pipe.tcp.port_443 == undefined)
-#{
-#	insmod "tcp_pipe --slave 443";      //The transportation layer
-#	insmod "tls_pipe cert=" + ssl_cert + " key=" + ssl_key + " pipe.tcp.port_443";  //The TLS layer
-#	pipe.tcp.port_443.size = 65536;
-#	pipe.tcp.port_443.ttl  = 240;
-	//To add a certification to the cert chain
-#	pipe.tsl.pipe.tcp.port_443.extra_cert_chain = "path/to/cert1:path/to/cert2:.....";
-	//To disable a specified version of TLS/SSL
-#	pipe.tls.pipe.tcp.port_443.ssl2 = 0;
-	//To enable DHE algorithm, you should provide the DH parameter file, which you can get from
-	//openssl dhparam -C <num-of-digits>
-#	pipe.tls.pipe.tcp.port_443.dhparam = "path/to/dhparam";
-	//To enable ECDHE algorithm, you should provide the curve name, or set the curve name to auto
-#	pipe.tls.pipe.tcp.port_443.ecdh_curve = "auto";
-	//To select a cipher set, you should provide a cipher string defined by openssl
-#	pipe.tls.pipe.tcp.port_443.cipher = "openssl-cipher-string";
+ssl_cert = basedir + "/cert.pem";
+ssl_key  = basedir + "/key.pem";
+if (pipe.tcp.port_443 == undefined && pipe.tls.pipe.tcp.port_443 == undefined)
+{
+	insmod "tcp_pipe --slave 443";      //The transportation layer
+	insmod "tls_pipe cert=" + ssl_cert + " key=" + ssl_key + " pipe.tcp.port_443";  //The TLS layer
+	pipe.tcp.port_443.size = 65536;
+	pipe.tcp.port_443.ttl  = 240;
+   //To add a certification to the cert chain
+	pipe.tsl.pipe.tcp.port_443.extra_cert_chain = "path/to/cert1:path/to/cert2:.....";
+   //To disable a specified version of TLS/SSL
+	pipe.tls.pipe.tcp.port_443.ssl2 = 0;
+   //To enable DHE algorithm, you should provide the DH parameter file, which you can get from
+   //openssl dhparam -C <num-of-digits>
+	pipe.tls.pipe.tcp.port_443.dhparam = "path/to/dhparam";
+   //To enable ECDHE algorithm, you should provide the curve name, or set the curve name to auto
+	pipe.tls.pipe.tcp.port_443.ecdh_curve = "auto";
+   //To select a cipher set, you should provide a cipher string defined by openssl
+	pipe.tls.pipe.tcp.port_443.cipher = "openssl-cipher-string";
 
-#}
-
+}
+*/
 
 #Servlet search path;
 runtime.servlet.path = "./bin:" + runtime.servlet.path;       // the servlet search path
