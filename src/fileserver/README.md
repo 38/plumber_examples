@@ -11,7 +11,7 @@ It's simple, just
 #How to start?
 You can start the server by typing command
 
-	pscript fileserver.pss
+	./fileserver.pss
 
 #How to try the server?
 Please go to http://localhost:8080, you should see the welcome page. You should able to
