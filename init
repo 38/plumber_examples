@@ -10,7 +10,7 @@ function print_help() {
 	echo "--test                  Run test cases before we start the environment"
 	echo "--recompile             Recompile the code"
 	echo "--reconfigure           Reconfigure the Plumber source code"
-	echo "--reinstall             Reinstall the Plumber environment"
+	echo "--reinstall[=<prefix>]  Reinstall the Plumber environment, if prefix specified, use the given prefix"
 	echo "--remove                Remove all the generated file"
 	echo "--commit=<tag>          Use the given version number of Plumber"
 	echo "--sync                  Sync the Plumber code"
@@ -35,108 +35,82 @@ function strip() {
 	echo $1 | sed 's/^[\t ]*//g' | sed 's/[\t ]*$//g'
 }
 
+function need() {
+	case ${1} in
+		reconfigure )
+			reconfigure="yes"
+			recompile="yes"
+			reinstall="yes"
+			;;
+		recompile )
+			recompile="yes"
+			reinstall="yes"
+			;;
+		reinstall )
+			reinstall="yes"
+			;;
+	esac
+}
+
 CC=gcc
 CXX=g++
 LOG=6
 shell=zsh
 
-if [ ! -e ${BUILDDIR}/plumber/Makefile ]
-then
-	reconfigure="yes"
-	recompile="yes"
-	reinstall="yes"
-fi
-
-if [ ! -e ${BUILDDIR}/plumber/bin/pscript ]
-then
-	recompile="yes"
-	reinstall="yes"
-fi
-
-if [ ! -e ${INSTALLDIR}/bin/pscript ]
-then
-	reinstall="yes"
-fi
+[ ! -e ${BUILDDIR}/plumber/Makefile ] && need reconfigure
+[ ! -e ${BUILDDIR}/plumber/bin/pscript ] && need recompile
+[ ! -e ${INSTALLDIR}/bin/pscript ] && need reinstall
 
 function parse_options() {
 	for arg in $@
 	do
 		case ${arg} in
 			--real )
-				realenv="/"
-				;;
+				realenv="/";;;
 			--real=* )
-				realenv="$(argv ${arg})"
-				;;
+				realenv="$(argv ${arg})";;;
 			--javascript ) 
-				javascript="yes"
-				;;
+				javascript="yes";;;
 			--reconfigure )
-				reconfigure="yes"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need reconfigure;;;
 			--recompile )
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need recompile;;;
 			--reinstall )
-				reinstall="yes"
-				;;
+				need reinstall;;;
+			--reinstall=* )
+				INSTALLDIR="$(argv ${arg})"
+				need reconfigure;;;
 			--commit=* )
 				commit="$(argv --string ${arg})"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need recompilel;;
 			--test )
-				runtest="yes"
-				;;
+				runtest="yes";;;
 			--remove )
-				remove="yes"
-				;;
+				remove="yes";;;
 			--shell=* )
-				shell="$(argv --string ${arg})"
-				;;
+				shell="$(argv --string ${arg})";;;
 			--gproftools )
 				LIBS=$(strip "${LIBS} -lprofiler")
 				CFLAGS=$(strip "${CFLAGS} -DGPROFTOOLS")
-				reconfigure="yes"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need reconfigure;;;
 			--sync )
 				sync="yes"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need recompile;;;
 			--cc=* )
 				CC="$(argv --string ${arg})"
-				reconfigure="yes"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need reconfigure;;;
 			--cxx=* )
 				CXX="$(argv --string ${arg})"
-				reconfigure="yes"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need reconfigure;;;
 			--log=* )
 				LOG="$(argv --string ${arg})"
-				reconfigure="yes"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need reconfigure;;;
 			--optimized )
 				OPT=4
-				reconfigure="yes"
-				recompile="yes"
-				reinstall="yes"
-				;;
+				need reconfigure;;;
 			--help )
 				print_help
-				exit 0
-				;;
+				exit 0;;;
 			* )
 				echo "Invalid argument ${arg}"
 				print_help
