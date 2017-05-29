@@ -1,6 +1,6 @@
 # The Example Repository for Plumber Project
 
-*Main project: https://github.com/38/plumber8*
+*Main project: https://github.com/38/plumber*
 
 This is the collections of the examples for the Plumber project. To compile
 the examples, because enter the Plumber Isolated Environment using the ./init
