@@ -3,10 +3,15 @@ Static File Server
 
 This is a simple server which you can access the static files under ./environment directory
 
-# How to make?
-It's simple, just 
+# Prerequisite
+For all the examples, you should initialize the Plumber environment first. To enter the Plumber environment, type the following command under the root directory of **this repository (not this example directory)**
 
-	make
+	./init
+
+# How to make?
+It's simple, first, you need to change pwd to the example directory and make 
+
+	cd ${ENVROOT}/src/fileserver && make
 
 # How to start?
 You can start the server by typing command
@@ -21,5 +26,3 @@ server.
 You can find more details about how this example works in the page 
 http://localhost:8080/explained_fileserver_pss.html
 
-# How to config the server?
-Please look into config.pss
