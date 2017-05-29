@@ -3,20 +3,20 @@ Static File Server
 
 This is a simple server which you can access the static files under ./environment directory
 
-#How to make?
+# How to make?
 It's simple, just 
 
 	make
 
-#How to start?
+# How to start?
 You can start the server by typing command
 
 	./fileserver.pss
 
-#How to try the server?
+# How to try the server?
 Please go to http://localhost:8080, you should see the welcome page. You should able to
 put any other files to the ./environment/server\_files directory, and access it via the 
 server.
 
-#How to config the server?
+# How to config the server?
 Please look into config.pss

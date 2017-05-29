@@ -136,7 +136,6 @@ int _exec(void* d)
 		pstd_bio_printf(out, "HTTP/1.1 404 Not Found\r\n");
 		pstd_bio_printf(out, "Content-Type: %s\r\n", _read_str(inst, ctx->mime_acc));
 		pstd_bio_printf(out, "Content-Length: %zu\r\n", sizeof(response) - 1);
-		pstd_bio_printf(out, "Location: %s\r\n", _read_str(inst, ctx->redir_acc));
 		_connection_field(out, ctx->output);
 		pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n", runtime_version());
 		pstd_bio_printf(out, "%s", response);
