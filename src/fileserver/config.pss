@@ -5,8 +5,9 @@
 /* The fileserver configuration file */
 
 basedir = "./environment";
-mime_type_file = basedir + "/mime.types";   //the mime.types file 
-server_base_dir = basedir + "/server_files"; //the server base dir
+mime_type_file = basedir + "/mime.types";   //The mime.types file 
+server_base_dir = basedir + "/server_files"; //The server base dir
+server_base_dir_2 = basedir + "/server_files_2"; //Another base dir, only used by the VHost example
 
 // Make sure the Plumber Standard Service Module, a.k.a PSSM has been loaded
 // The PSSM provides a lot of standard framework service, like framework managed

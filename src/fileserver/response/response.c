@@ -82,6 +82,18 @@ int _exec(void* d)
 		pipe_cntl(ctx->output, PIPE_CNTL_CLR_FLAG, PIPE_PERSIST);
 		goto RET;
 	}
+	
+	if(pipe_eof(ctx->bad_request) == 0)
+	{
+		static const char response[] = "<html><title>Bad Request</title><body>We can't understand what you said, sorry. </body></html>";
+		pstd_bio_printf(out, "HTTP/1.1 400 Bad Request\r\n");
+		pstd_bio_printf(out, "Content-Type: text/html\r\n");
+	    pstd_bio_printf(out, "Connection: close\r\n");
+		pstd_bio_printf(out, "Content-Length: %zu\r\n\r\n", sizeof(response) - 1);
+		pstd_bio_printf(out, "%s", response);
+		pipe_cntl(ctx->output, PIPE_CNTL_CLR_FLAG, PIPE_PERSIST);
+		goto RET;
+	}
 
 	if(pipe_eof(ctx->invalid_path) == 0)
 	{

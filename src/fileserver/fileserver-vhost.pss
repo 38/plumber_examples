@@ -1,0 +1,60 @@
+#!/home/haohou/bin/pscript
+/**
+ * Copyright (C) 2017, Hao Hou
+ */
+
+/* The Virtual Hosting Static File Server Example */
+
+include "config.pss"
+
+fileserver = {
+	parsereq    := "getpath" @[color = green];
+	parsepath   := "filesystem/parsepath --ext-name";
+	guessmime   := "filesystem/mimetype " + mime_type_file;
+	readfile_1  := "filesystem/readfile " + server_base_dir;
+	readfile_2  := "filesystem/readfile " + server_base_dir_2;
+	selector    := "dataflow/demux localhost:8080"
+	merger      := "dataflow/firstnonempty 2"
+    error       := "dataflow/firstnonempty 7";
+	genres      := " response" @[color = green];
+
+	/* Parse the request */
+	() -> "request" parsereq {
+		"path" -> "origin" parsepath {
+			/* This is the dataflow for the mime type manipulation */
+			"extname" -> "extname" guessmime "mimetype" -> "mime" genres;
+			/* Here we need to feed the demux */
+			"relative" -> "data" selector;
+		};
+		"host" -> "cond" selector;
+	};
+	
+	/* Read the file */
+	selector {
+		"out0"    -> "path" readfile_1 "result" -> "in0"
+		"default" -> "path" readfile_2 "result" -> "in1"
+	} merger "out" -> "file" genres "output" -> ();
+
+	/* Handle the internal error */
+	{
+		parsereq   "__error__" -> "in0";
+		parsepath  "__error__" -> "in1";
+		guessmime  "__error__" -> "in2";
+		readfile_1 "__error__" -> "in3";
+		readfile_2 "__error__" -> "in4";
+		selector   "__error__" -> "in5";
+		merger     "__error__" -> "in6";
+	} error "out" -> "500" genres;
+
+	/* Handle the 400 error */
+	parsereq "error" -> "400" genres;
+
+	/* Handle the 403 error */
+	parsepath "__null__" -> "403" genres;
+};
+
+/* dump the visualization graph */
+visualize fileserver >>> "/dev/stdout";
+
+/* then start the file server */
+start fileserver

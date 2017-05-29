@@ -27,7 +27,7 @@ int init(uint32_t argc, char const* const* argv, void* data)
 	sd->request = pipe_define("request", PIPE_INPUT, NULL);
 	sd->path    = pipe_define("path", PIPE_OUTPUT, "plumber/std/request_local/String");
 	sd->error   = pipe_define("error", PIPE_OUTPUT, NULL);
-	sd->host    = pipe_define("host", PIPE_OUTPUT, "plumber/std/request_local/Stirng");
+	sd->host    = pipe_define("host", PIPE_OUTPUT, "plumber/std/request_local/String");
 
 	if(sd->request == (pipe_t)-1 || sd->path == (pipe_t)-1 || sd->error == (pipe_t)-1)
 	{
