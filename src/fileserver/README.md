@@ -11,7 +11,7 @@ For all the examples, you should initialize the Plumber environment first. To en
 # How to make?
 It's simple, first, you need to change pwd to the example directory and make 
 
-	cd ${ENVROOT}/src/fileserver && make
+	cd ${ENVROOT}/../src/fileserver && make
 
 # How to start?
 You can start the server by typing command
