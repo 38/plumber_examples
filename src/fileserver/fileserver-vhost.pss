@@ -16,7 +16,7 @@ fileserver = {
 	selector    := "dataflow/demux localhost:8080"
 	merger      := "dataflow/firstnonempty 2"
     error       := "dataflow/firstnonempty 7";
-	genres      := " response" @[color = green];
+	genres      := "response" @[color = green];
 
 	/* Parse the request */
 	() -> "request" parsereq {
