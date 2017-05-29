@@ -1,7 +1,7 @@
 #!/usr/bin/env pscript
 /**
  * Copyright (C) 2017, Hao Hou
- */
+ **/
 /* The main script for the static file server */
 
 // Load the configuration
@@ -9,13 +9,6 @@ include "config.pss"
 
 //define the file server
 fileserver = {
-# Define the nodes in the service graph, the basic syntax is simple
-#
-#    <node-name> := "<servlet-name> [params]"
-#
-# The service graph will be able to visualized by outpting an Graphviz 
-# described graph. So we are also able to provide some Graphviz attribute.
-# So that we can get more meaningful visualizations
 	parsereq  := "getpath" @[color = green];
 	parsepath := "filesystem/parsepath --ext-name";
 	guessmime := "filesystem/mimetype " + mime_type_file;
@@ -23,41 +16,6 @@ fileserver = {
 	genres    := " response" @[color = green];
     error     := "dataflow/firstnonempty 4";
 
-# To define the interconnection between nodes, the general syntax is quite
-# straightfoward. The basic form of a pipe connection is:
-#
-#     <upstream-node> "<output-pipe>" -> "<input-pipe>" <downstream-node>
-#
-# Or for the input of the service:
-#
-#     () -> "input-pipe" <node>
-#
-# For the output of the service:
-#
-#     <node> "output-pipe" -> ()
-#
-# We also support chaining the pipe description, for example:
-#
-#     nodeA "output" -> "input" nodeB "output" -> "input" nodeC
-#
-# Which is equivalent to
-#
-#     nodeA "output" -> "input" nodeB;
-#     nodeB "output" -> "input" nodeC;
-#
-# We also support another form of syntactical sugar which allows us
-# conbime the same node into one
-#
-#    nodeA {
-#		"output1" -> "input" nodeB;
-#		"output2" -> "input" nodeC;
-#	}
-#
-# Which is equivalent to 
-#
-#	nodeA "output1" -> "input" nodeB;
-#	nodeA "output2" -> "input" nodeC;
-	
 	/* Setup normal logic */
 	() -> "request" parsereq "path" -> "origin" parsepath {
 		"extname" ->  "extname" guessmime "mimetype" -> "mime";

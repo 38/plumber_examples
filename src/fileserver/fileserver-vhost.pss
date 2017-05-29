@@ -1,4 +1,4 @@
-#!/home/haohou/bin/pscript
+#!/usr/bin/env pscript
 /**
  * Copyright (C) 2017, Hao Hou
  */

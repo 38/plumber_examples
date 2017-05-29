@@ -16,7 +16,10 @@ You can start the server by typing command
 # How to try the server?
 Please go to http://localhost:8080, you should see the welcome page. You should able to
 put any other files to the ./environment/server\_files directory, and access it via the 
-server.
+server. 
+
+You can find more details about how this example works in the page 
+http://localhost:8080/explained\_fileserver\_pss.html
 
 # How to config the server?
 Please look into config.pss
