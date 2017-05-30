@@ -15,7 +15,7 @@ fileserver = {
 	readfile_2  := "filesystem/readfile " + server_base_dir_2;
 	selector    := "dataflow/demux localhost:8080"
 	merger      := "dataflow/firstnonempty 2"
-    error       := "dataflow/firstnonempty 7";
+	error       := "dataflow/firstnonempty 7";
 	genres      := "response" @[color = green];
 
 	/* Parse the request */
