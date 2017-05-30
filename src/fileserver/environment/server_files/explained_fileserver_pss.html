@@ -5,13 +5,26 @@
 		</title> 
 		<style>
 			body {
-				width: 55em;
+				width: 60em;
 				margin: 0 auto;
 				font-family: Tahoma, Verdana, Arial, sans-serif;
+				font-size: 18px;
 			}
 			code {
 			  	display: block;
-			  	white-space: pre-wrap
+			  	white-space: pre-wrap;
+				font-size: 16px;
+				background-color: #eee;
+			}
+			.pss-comment {
+				color: blue;
+				font-style: italic;
+			}
+			.pss-string {
+				color: red;
+			}
+			.pss-variable {
+				font-weight: bold;
 			}
 		</style>
 		<script>
@@ -30,11 +43,84 @@
 					node.appendChild(link);
 					toc.appendChild(node);
 				}
+
+				var codes =  document.getElementsByTagName("code");
+				for(var i = 0; i < codes.length; i ++)
+					codes[i].innerHTML = highlight(codes[i]);
+			}
+			function highlight(element) {
+				var orignal = element.innerText;
+				var transformed = "";
+				var soth = 0;
+				var sstr = 1;
+				var sid  = 2;
+				var scm  = 3;
+				var state = soth;
+				for(var i = 0; i < orignal.length; i ++)
+				{
+					var ch = orignal[i];
+					if(state == soth)
+					{
+						if((ch >= 'a' && ch <= 'z') ||
+						   (ch >= 'A' && ch <= 'Z') ||
+							ch == '_')
+						{
+							transformed += "<span class=\"pss-variable\">" + ch
+							state = sid;
+						}
+						else if(ch == '"')
+						{
+							transformed += "<span class=\"pss-string\">\""
+							state = sstr;
+						}
+						else if(ch == '/')
+						{
+							transformed += "<span class=\"pss-comment\">\/";
+							state = scm;
+						}
+						else transformed += ch;
+					}
+					else if(state == sstr)
+					{
+						if(ch == '\"') 
+						{
+							transformed += "\"</span>"
+							state = soth;
+						}
+						else transformed += ch;
+					}
+					else  if(state == sid)
+					{
+						if((ch >= 'a' && ch <= 'z') ||
+						   (ch >= 'A' && ch <= 'Z') ||
+							ch == '_')
+						{
+							transformed += ch;
+						}
+						else 
+						{
+							transformed += "</span>" + ch
+							state = soth;
+						}
+					}
+					else if(state = scm)
+					{
+						if(ch == '\n') 
+						{
+							transformed += "</span>\n"
+							state = soth;
+						}
+						else transformed += ch;
+					}
+				}
+
+				return transformed.replace(/->/g, "-&gt;");
+
 			}
 		</script>
 	</head>
 	<body>
-		<h1>Static File Server Example (fileserver.pss)</h1>
+		<h1>Static File Server Example (<a href="/fileserver.pss.txt">fileserver.pss</a>)</h1>
 		<ul id="toc">
 		</ul>
 		<h2 class="section">What is it?</h2>
@@ -44,40 +130,60 @@
 		</p>
 		<h2 class="section">How does it work?</h2>
 		<p>
-			The Plumber Service Script uses the PSS interpreter called pscript. When you start the server, you are actually
-			running the pscript interpreter. The interesting part of the script is, the script only initialize the server 
-			which handling the HTTP requests, but itself doesn't handling any request.
+			The Plumber Service Script uses a script interpreter called pscript. When you start the server, you are actually
+			running a script in pscript interpreter. The intersting part of the language is, although Plumber framework is desgined
+			for high performance applications, the script language itself doesn't have any performance optimization.
+			Instead of serving traffic from the network, the script code is responsible build the service you need and launch it. 
 		</p>
 		<p>
-			A service is defined by the service graph literal in the PSS language, and once you run the <em>start</em> statement
-			in the PSS, the service described by the service graph will start serving traffic. Let's look at the service graph 
-			we are current using. (Please note in this graph we ignored all the error handling pipes)
+			In Plumber framework, services are built up with basic build blocks called servlets (Note please distinguish with Java
+			Servlet). Each servlet is a tiny piece of program with one or more input ports and output ports. When a servlet is
+			activated, it reads the input ports and writes the output ports. Plumber framework provides servlets a runtime environment
+			that connects the ports with pipes in a desired way. An application is built up by connecting those servlets into a
+			graph.
 		</p>
-		<center><img src="/service_graph.png" style="width:300px"/></center>
+		<p>
+			The Plumber framework provides a visualization of the service we have made. In the graph, each servlet is represtented by 
+			a node. There's three rows in the servlet node.
+			<center><img src="/servlet_repr.png" style="width:300px"/></center>
+			<ul>
+				<li>First row is the list of input ports</li>
+				<li>The second row has two signal pipe "N" and "E", which we will discuss later, and the name of the servlet</li>
+				<li>The last line is the list of output port</li>
+			</ul>
+			Let's look at the service graph that is currently serving traffic.
+		</p>
+		<center><img src="/service_graph.png" style="width:400px"/></center>
 		<p>
 			The request comes from the input, which can be either port 8080 for HTTP and port 4343 for HTTPS. When the request
-			comes from the network, it will be handled by the node called "parsereq". And the content of the request will be 
-			sent to the pipe endpoint called "request". The servlet produces three output: 
+			comes from network, it will be handled by the request parser. And the content of the request will be 
+			sent to the pipe port called "request". The servlet produces three output: 
 			<ul>
 				<li> <strong>path</strong> The path the client is requesting </li>
-				<li> <strong>host</strong> The host name, which will be used when we enable the virtual hosting </li>
-				<li> <strong>error</strong> Indicates the servlet just got a invalid request</li>
+				<li> <strong>host</strong> (Not in use) The host name, which will be used when we enable the virtual hosting </li>
+				<li> <strong>error</strong> (Not in use) Indicates the servlet just got a invalid request</li>
 			</ul>
 		</p>
 		<p>
-			After we parsed the request, the path the client is requesting will be sent to the path parser and the path parser will
-			produce the relative path and the extension name. The extension name will be sent to the servlet "guessmime", it will 
-			guess the file type based on the extension name. 
+			After the request parser parsed the request, the path the client is requesting will be sent to the path parser. The path 
+			parser will simplify the path and extract the extension name from the original path.
 		</p>
 		<p>
-			On the other hand, the relative path will be sent to the readfile servlet, it will read the file from the disk and sends
-			the result to the response render.
+			The extension name extracted by the path parser will be sent to the MIME guesser to determine which MIME type we should use
+			in the response.
 		</p>
 		<p>
-			Finally, the response render will take the file content and mime type information and render a HTTP response and write
-			to the network.
+			On the other hand, the relative path will be sent to the file reader, and the reader reads the file from the disk and sends
+			the read result to the response generator.
 		</p>
-		<h2 class="section">How is the graph Created?</h2>
+		<p>
+			Finally, the response generator takes the file content and type information and produce a HTTP response to the client. 
+		</p>
+		<h2 class="section">How is the graph created?</h2>
+		<p>
+			A service is defined by the service graph literal in the PSS language, and once you run the <em>start</em> statement
+			in the PSS, the service described by the service graph will start serving traffic. 		
+		</p>
 		<p>
 			As we previously said, it's created by the service graph literal in the Plumber Service Script language. The service literal
 			is a simple domain specific language used to connect different servlet into a service graph. It is wrapped with a pair of curly
@@ -85,7 +191,7 @@
 		</p>
 		<p>
 			<code>	service_graph = { 
-		/* Your service definition comes here */ 
+		// Your service definition comes here
 	}</code>
 		</p>
 		<p>
@@ -111,8 +217,8 @@
 			pipe definition. For example
 			<p>
 				<code>	nodeA "output" -&gt; "input" nodeB "output" -&gt; "input" nodeC;</code>
-			</p>
 			means 
+			</p>
 			<p>
 				<code>	nodeA "output" -&gt; "input" nodeB;
 	nodeB "output" -&gt; "input" nodeC; </code>
@@ -125,20 +231,20 @@
 		"output1" -&gt; "input" nodeB;
 		"output2" -&gt; "input" nodeC;
 	}</code>
-			</p>
 			means
+			</p>
 			<p>
 				<code>	nodeA "output1" -&gt; "input" nodeB;
 	nodeA "output2" -&gt; "input" nodeC;</code>
-			</p>
 			In fact we can do it for either input pipe or output pipes or both, for example:
+			</p>
 			<p>
 				<code>	nodeA {
 		"output1" -&gt; "input1";
 		"output2" -&gt; "input2";
 	} nodeB;</code>
-			</p>
 			means
+			</p>
 			<p>
 				<code>	nodeA "output1" -&gt; "input1" nodeB;
 	nodeA "output2" -&gt; "input2" nodeB;</code>
@@ -150,19 +256,20 @@
 		<p>
 			<code>	file_server = {
 		// Definition of the nodes we need to use
-		parsereq   := "parsereq";
-		parsepath  := "filesystem/parsepath --ext-name";
-		readfile   := "filesystem/readfile ./environment/server_files";
-		guessmime  := "filesystem/mime ./environment/mime.types";
-		genres     := "genres";
+		RequestParser     := "parsereq";
+		PathParser        := "filesystem/parsepath --ext-name";
+		FileReader        := "filesystem/readfile ./environment/server_files";
+		MIMEGuesser       := "filesystem/mime ./environment/mime.types";
+		ResponseGenerator := "genres";
 
 		// Definition of the interconnections
-		() -&gt; "request" parsereq "path" -&gt; "origin" parsepath {
-				"relative" -&gt; "path" readfile "result" -&gt; "file";
-				"extname" -&gt; "extname" guessmime "mimetype" -&gt; "mime";
-		} genres "output" -&gt; ();
+		() -&gt; "request" ResponseGenerator "path" -&gt; "origin" PathParser {
+				"relative" -&gt; "path" FileReader "result" -&gt; "file";
+				"extname" -&gt; "extname" MIMEGuesser "mimetype" -&gt; "mime";
+		} ResponseGenerator "output" -&gt; ();
 	}</code>
 		</p>
+		<center><img src="/service_graph.png" style="width:400px"/></center>
 		<h2 class="section">Adding error handling to the service</h2>
 		<p>	
 			Here's one more question remaining, what if the server is error. Actually, the 404 error is handled by read file. However
@@ -174,13 +281,13 @@
 			define a pipe called "__error__" for every servlet, and it will be empty if the servlet runs sucessfully. However, it will be written
 			by the framework whenever the servlet returns an error code. So handling the servlet failure is quite simple in this way. 
 			<p>
-				<code>	error := "dataflow/firstnonempty 4";
+				<code>	ErrorCombiner := "dataflow/firstnonempty 4";
 	{
-		parsereq  "__error__" -&gt; "in0";
-		parsepath "__error__" -&gt; "in1";
-		readfile  "__error__" -&gt; "in2";
-		guessmime "__error__" -&gt; "in3";
-	} error "out" -&gt; "500" genres; </code>
+		RequestParser  "__error__" -&gt; "in0";
+		PathParser     "__error__" -&gt; "in1";
+		FileReader     "__error__" -&gt; "in2";
+		MIMEGuesser    "__error__" -&gt; "in3";
+	} ErrorCombiner "out" -&gt; "500" ResponseGenerator; </code>
 			</p>
 			<p>
 				You may ask what if the "error" node or "genres" node failed to run? The answer is, consider a normal HTTP server, if there's some
@@ -193,13 +300,13 @@
 			by the servlet. In our example, when the "parsepath" node reject to serve the request, "__null__" pipe will be activated. In this case,
 			we should return a forbiden response.
 			<p>
-				<code>	parsepath "__null__" -&gt; "403" genres;</code>
+				<code>	PathParser "__null__" -&gt; "403" ResponseGenerator;</code>
 			</p>
 			<p>
 			Finally, let's think about what if the server gets a malformed HTTP request from network. In this case, the "error" pipe of "parsereq" will
 			have some output, and we should let the response render know about this and produce a bad request response.
 			<p>
-				<code>	parseres "error" -&gt; "400" genres;</code>
+				<code>	RequestParser "error" -&gt; "400" ResponseGenerator;</code>
 			</p>
 		</p>
 		<h2 class="section">How does our server listening to the outside</h2>

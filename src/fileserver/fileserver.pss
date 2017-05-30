@@ -9,32 +9,33 @@ include "config.pss"
 
 //define the file server
 fileserver = {
-	parsereq  := "getpath" @[color = green];
-	parsepath := "filesystem/parsepath --ext-name";
-	guessmime := "filesystem/mimetype " + mime_type_file;
-	readfile  := "filesystem/readfile " + server_base_dir;
-	genres    := " response" @[color = green];
-	error     := "dataflow/firstnonempty 4";
+	RequestParser      := "getpath" @[color = green];
+	PathParser         := "filesystem/parsepath --ext-name";
+	MIMEGuesser        := "filesystem/mimetype " + mime_type_file;
+	FileReader         := "filesystem/readfile " + server_base_dir;
+	ResponseGenerator  := " response" @[color = green];
 
 	/* Setup normal logic */
-	() -> "request" parsereq "path" -> "origin" parsepath {
-		"extname" ->  "extname" guessmime "mimetype" -> "mime";
-		"relative" -> "path" readfile "result" -> "file"
-	} genres "output" -> ();
+	() -> "request" RequestParser "path" -> "origin" PathParser {
+		"extname" ->  "extname" MIMEGuesser "mimetype" -> "mime";
+		"relative" -> "path" FileReader "result" -> "file"
+	} ResponseGenerator "output" -> ();
 
+
+	ErrorCombiner      := "dataflow/firstnonempty 4";
 	/* What if we got an invalid request */
-	parsereq "error" -> "400" genres;
+	RequestParser "error" -> "400" ResponseGenerator;
 
 	/* What if we got an invalid path */
-	parsepath "__null__" -> "403" genres;
+	PathParser "__null__" -> "403" ResponseGenerator;
 
 	/* Let's handle the unexpected service error */
 	{
-		parsereq  "__error__" -> "in0";
-		parsepath "__error__" -> "in1";
-		guessmime "__error__" -> "in2";
-		readfile  "__error__" -> "in3";
-	} error "out" -> "500" genres;
+		PathParser    "__error__" -> "in0";
+		RequestParser "__error__" -> "in1";
+		MIMEGuesser   "__error__" -> "in2";
+		FileReader    "__error__" -> "in3";
+	} ErrorCombiner "out" -> "500" ResponseGenerator;
 };
 
 /* (Optional) dump the visualization graph */
