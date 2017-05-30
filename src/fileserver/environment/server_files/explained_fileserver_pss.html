@@ -27,6 +27,7 @@
 				font-weight: bold;
 			}
 		</style>
+		<script src="/pss-syntax.js"></script>
 		<script>
 			window.onload = function() {
 				var sections = document.getElementsByClassName("section");
@@ -43,79 +44,7 @@
 					node.appendChild(link);
 					toc.appendChild(node);
 				}
-
-				var codes =  document.getElementsByTagName("code");
-				for(var i = 0; i < codes.length; i ++)
-					codes[i].innerHTML = highlight(codes[i]);
-			}
-			function highlight(element) {
-				var orignal = element.innerText;
-				var transformed = "";
-				var soth = 0;
-				var sstr = 1;
-				var sid  = 2;
-				var scm  = 3;
-				var state = soth;
-				for(var i = 0; i < orignal.length; i ++)
-				{
-					var ch = orignal[i];
-					if(state == soth)
-					{
-						if((ch >= 'a' && ch <= 'z') ||
-						   (ch >= 'A' && ch <= 'Z') ||
-							ch == '_')
-						{
-							transformed += "<span class=\"pss-variable\">" + ch
-							state = sid;
-						}
-						else if(ch == '"')
-						{
-							transformed += "<span class=\"pss-string\">\""
-							state = sstr;
-						}
-						else if(ch == '/')
-						{
-							transformed += "<span class=\"pss-comment\">\/";
-							state = scm;
-						}
-						else transformed += ch;
-					}
-					else if(state == sstr)
-					{
-						if(ch == '\"') 
-						{
-							transformed += "\"</span>"
-							state = soth;
-						}
-						else transformed += ch;
-					}
-					else  if(state == sid)
-					{
-						if((ch >= 'a' && ch <= 'z') ||
-						   (ch >= 'A' && ch <= 'Z') ||
-							ch == '_')
-						{
-							transformed += ch;
-						}
-						else 
-						{
-							transformed += "</span>" + ch
-							state = soth;
-						}
-					}
-					else if(state = scm)
-					{
-						if(ch == '\n') 
-						{
-							transformed += "</span>\n"
-							state = soth;
-						}
-						else transformed += ch;
-					}
-				}
-
-				return transformed.replace(/->/g, "-&gt;");
-
+				highLightPssCode();
 			}
 		</script>
 	</head>
@@ -190,7 +119,7 @@
 			braces, for example:
 		</p>
 		<p>
-			<code>	service_graph = { 
+			<code class="pss">	service_graph = { 
 		// Your service definition comes here
 	}</code>
 		</p>
@@ -198,7 +127,7 @@
 			The service definition has two parts, the node definition and the graph definition. The nodes definition defines what servlet do
 			we have in the service graph. It looks like
 			<p>
-				<code>	dup_your_input := "dataflow/dup 3";</code>
+				<code class="pss">	dup_your_input := "dataflow/dup 3";</code>
 			</p>
 			This will create a node which reads from the input pipe and produces 3 copy of the input.
 		</p>
@@ -207,7 +136,7 @@
 			Once we have all the servlet node we need in the graph, we will be able to connect them and make a real graph. The basic syntax
 			to connect two endpoints are quite straight forward. It looks like:
 			<p>
-				<code>	upstream_node "output" -&gt; "input" downstream_node;
+				<code class="pss">	upstream_node "output" -&gt; "input" downstream_node;
 	() -&gt; "input" input_node;
 	output_node "output" -&gt; ();</code>
 			</p>
@@ -216,37 +145,37 @@
 			To make life easier, the PSS provides some syntactical sugar to reduce the code you need to write. First, you can chaining the
 			pipe definition. For example
 			<p>
-				<code>	nodeA "output" -&gt; "input" nodeB "output" -&gt; "input" nodeC;</code>
+				<code class="pss">	nodeA "output" -&gt; "input" nodeB "output" -&gt; "input" nodeC;</code>
 			means 
 			</p>
 			<p>
-				<code>	nodeA "output" -&gt; "input" nodeB;
+				<code class="pss">	nodeA "output" -&gt; "input" nodeB;
 	nodeB "output" -&gt; "input" nodeC; </code>
 			</p>
 		</p>
 		<p>
 			Second, we are able to simplify the code if we are talking about the same servlet, for example
 			<p>
-				<code>	nodeA {
+				<code class="pss">	nodeA {
 		"output1" -&gt; "input" nodeB;
 		"output2" -&gt; "input" nodeC;
 	}</code>
 			means
 			</p>
 			<p>
-				<code>	nodeA "output1" -&gt; "input" nodeB;
+				<code class="pss">	nodeA "output1" -&gt; "input" nodeB;
 	nodeA "output2" -&gt; "input" nodeC;</code>
 			In fact we can do it for either input pipe or output pipes or both, for example:
 			</p>
 			<p>
-				<code>	nodeA {
+				<code class="pss">	nodeA {
 		"output1" -&gt; "input1";
 		"output2" -&gt; "input2";
 	} nodeB;</code>
 			means
 			</p>
 			<p>
-				<code>	nodeA "output1" -&gt; "input1" nodeB;
+				<code class="pss">	nodeA "output1" -&gt; "input1" nodeB;
 	nodeA "output2" -&gt; "input2" nodeB;</code>
 			</p>
 		</p>
@@ -254,7 +183,7 @@
 		<h2 class="section">Graph in Real World</h2>
 		Now let's look at the service graph for the static file server. Let's translate the graph shown above to serivce literal
 		<p>
-			<code>	file_server = {
+			<code class="pss">	file_server = {
 		// Definition of the nodes we need to use
 		RequestParser     := "parsereq";
 		PathParser        := "filesystem/parsepath --ext-name";
@@ -281,7 +210,7 @@
 			define a pipe called "__error__" for every servlet, and it will be empty if the servlet runs sucessfully. However, it will be written
 			by the framework whenever the servlet returns an error code. So handling the servlet failure is quite simple in this way. 
 			<p>
-				<code>	ErrorCombiner := "dataflow/firstnonempty 4";
+				<code class="pss">	ErrorCombiner := "dataflow/firstnonempty 4";
 	{
 		RequestParser  "__error__" -&gt; "in0";
 		PathParser     "__error__" -&gt; "in1";
@@ -300,13 +229,13 @@
 			by the servlet. In our example, when the "parsepath" node reject to serve the request, "__null__" pipe will be activated. In this case,
 			we should return a forbiden response.
 			<p>
-				<code>	PathParser "__null__" -&gt; "403" ResponseGenerator;</code>
+				<code class="pss">	PathParser "__null__" -&gt; "403" ResponseGenerator;</code>
 			</p>
 			<p>
 			Finally, let's think about what if the server gets a malformed HTTP request from network. In this case, the "error" pipe of "parsereq" will
 			have some output, and we should let the response render know about this and produce a bad request response.
 			<p>
-				<code>	RequestParser "error" -&gt; "400" ResponseGenerator;</code>
+				<code class="pss">	RequestParser "error" -&gt; "400" ResponseGenerator;</code>
 			</p>
 		</p>
 		<h2 class="section">How does our server listening to the outside</h2>
@@ -316,7 +245,7 @@
 			actual IO operation. As you can imagine, the TCP protocol is wrapped by the ITC module called TCP Pipe. And the TCP module is responsible for listening
 			to the outside of the world. 
 			<p>
-				<code>	insmod "tcp_pipe 8080";</code>
+				<code class="pss">	insmod "tcp_pipe 8080";</code>
 			</p>
 		</p>
 		<p>
@@ -327,7 +256,7 @@
 		<p>
 			You are able to initialize a TLS module over a TCP module to enable the HTTPS support.
 			<p>
-				<code>	insmod "tcp_pipe --slave 4343";
+				<code class="pss">	insmod "tcp_pipe --slave 4343";
 	insmod "tls_pipe cert=cert.pem key=key.pem pipe.tcp.port_4343";</code>
 			</p>
 		</p>
