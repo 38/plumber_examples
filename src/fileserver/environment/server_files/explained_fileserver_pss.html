@@ -15,16 +15,17 @@
 			  	white-space: pre-wrap;
 				font-size: 16px;
 				background-color: #eee;
+				padding: 15px;
 			}
 			.pss-comment {
-				color: blue;
+				color: silver;
 				font-style: italic;
 			}
 			.pss-string {
-				color: red;
+				color: green;
 			}
 			.pss-variable {
-				font-weight: bold;
+				color: blue;
 			}
 		</style>
 		<script src="/pss-syntax.js"></script>
@@ -119,15 +120,15 @@
 			braces, for example:
 		</p>
 		<p>
-			<code class="pss">	service_graph = { 
-		// Your service definition comes here
-	}</code>
+			<code class="pss">service_graph = { 
+	// Your service definition comes here
+}</code>
 		</p>
 		<p>
 			The service definition has two parts, the node definition and the graph definition. The nodes definition defines what servlet do
 			we have in the service graph. It looks like
 			<p>
-				<code class="pss">	dup_your_input := "dataflow/dup 3";</code>
+				<code class="pss">dup_your_input := "dataflow/dup 3";</code>
 			</p>
 			This will create a node which reads from the input pipe and produces 3 copy of the input.
 		</p>
@@ -136,67 +137,73 @@
 			Once we have all the servlet node we need in the graph, we will be able to connect them and make a real graph. The basic syntax
 			to connect two endpoints are quite straight forward. It looks like:
 			<p>
-				<code class="pss">	upstream_node "output" -&gt; "input" downstream_node;
-	() -&gt; "input" input_node;
-	output_node "output" -&gt; ();</code>
+				<code class="pss">upstream_node "output" -&gt; "input" downstream_node;
+() -&gt; "input" input_node;
+output_node "output" -&gt; ();</code>
 			</p>
 		</p>
 		<p>
 			To make life easier, the PSS provides some syntactical sugar to reduce the code you need to write. First, you can chaining the
 			pipe definition. For example
 			<p>
-				<code class="pss">	nodeA "output" -&gt; "input" nodeB "output" -&gt; "input" nodeC;</code>
+				<code class="pss">nodeA "output" -&gt; "input" nodeB "output" -&gt; "input" nodeC;</code>
+			</p>
+			<p>
 			means 
 			</p>
 			<p>
-				<code class="pss">	nodeA "output" -&gt; "input" nodeB;
+				<code class="pss">nodeA "output" -&gt; "input" nodeB;
 	nodeB "output" -&gt; "input" nodeC; </code>
 			</p>
 		</p>
 		<p>
 			Second, we are able to simplify the code if we are talking about the same servlet, for example
 			<p>
-				<code class="pss">	nodeA {
-		"output1" -&gt; "input" nodeB;
-		"output2" -&gt; "input" nodeC;
-	}</code>
+				<code class="pss">nodeA {
+	"output1" -&gt; "input" nodeB;
+	"output2" -&gt; "input" nodeC;
+}</code>
+			</p>
+			<p>
 			means
 			</p>
 			<p>
-				<code class="pss">	nodeA "output1" -&gt; "input" nodeB;
-	nodeA "output2" -&gt; "input" nodeC;</code>
+				<code class="pss">nodeA "output1" -&gt; "input" nodeB;
+nodeA "output2" -&gt; "input" nodeC;</code>
 			In fact we can do it for either input pipe or output pipes or both, for example:
 			</p>
 			<p>
-				<code class="pss">	nodeA {
-		"output1" -&gt; "input1";
-		"output2" -&gt; "input2";
-	} nodeB;</code>
+				<code class="pss">nodeA {
+	"output1" -&gt; "input1";
+	"output2" -&gt; "input2";
+} nodeB;</code>
+			</p>
+			<p>
 			means
 			</p>
 			<p>
-				<code class="pss">	nodeA "output1" -&gt; "input1" nodeB;
-	nodeA "output2" -&gt; "input2" nodeB;</code>
+				<code class="pss">nodeA "output1" -&gt; "input1" nodeB;
+nodeA "output2" -&gt; "input2" nodeB;</code>
 			</p>
 		</p>
 
 		<h2 class="section">Graph in Real World</h2>
 		Now let's look at the service graph for the static file server. Let's translate the graph shown above to serivce literal
 		<p>
-			<code class="pss">	file_server = {
-		// Definition of the nodes we need to use
-		RequestParser     := "parsereq";
-		PathParser        := "filesystem/parsepath --ext-name";
-		FileReader        := "filesystem/readfile ./environment/server_files";
-		MIMEGuesser       := "filesystem/mime ./environment/mime.types";
-		ResponseGenerator := "genres";
+			<code class="pss">file_server = {
+	// Definition of the nodes we need to use
+	RequestParser     := "parsereq";
+	PathParser        := "filesystem/parsepath --ext-name";
+	FileReader        := "filesystem/readfile ./environment/server_files";
+	MIMEGuesser       := "filesystem/mime ./environment/mime.types";
+	ResponseGenerator := "genres";
 
-		// Definition of the interconnections
-		() -&gt; "request" ResponseGenerator "path" -&gt; "origin" PathParser {
-				"relative" -&gt; "path" FileReader "result" -&gt; "file";
-				"extname" -&gt; "extname" MIMEGuesser "mimetype" -&gt; "mime";
-		} ResponseGenerator "output" -&gt; ();
-	}</code>
+	// Definition of the interconnections
+	() -&gt; "request" ResponseGenerator "path" -&gt; "origin" PathParser {
+			"relative" -&gt; "path" FileReader "result" -&gt; "file";
+			"extname" -&gt; "extname" MIMEGuesser "mimetype" -&gt; "mime";
+	} ResponseGenerator "output" -&gt; ();
+}</code>
 		</p>
 		<center><img src="/service_graph.png" style="width:400px"/></center>
 		<h2 class="section">Adding error handling to the service</h2>
@@ -210,13 +217,13 @@
 			define a pipe called "__error__" for every servlet, and it will be empty if the servlet runs sucessfully. However, it will be written
 			by the framework whenever the servlet returns an error code. So handling the servlet failure is quite simple in this way. 
 			<p>
-				<code class="pss">	ErrorCombiner := "dataflow/firstnonempty 4";
-	{
-		RequestParser  "__error__" -&gt; "in0";
-		PathParser     "__error__" -&gt; "in1";
-		FileReader     "__error__" -&gt; "in2";
-		MIMEGuesser    "__error__" -&gt; "in3";
-	} ErrorCombiner "out" -&gt; "500" ResponseGenerator; </code>
+				<code class="pss">ErrorCombiner := "dataflow/firstnonempty 4";
+{
+	RequestParser  "__error__" -&gt; "in0";
+	PathParser     "__error__" -&gt; "in1";
+	FileReader     "__error__" -&gt; "in2";
+	MIMEGuesser    "__error__" -&gt; "in3";
+} ErrorCombiner "out" -&gt; "500" ResponseGenerator; </code>
 			</p>
 			<p>
 				You may ask what if the "error" node or "genres" node failed to run? The answer is, consider a normal HTTP server, if there's some
@@ -229,13 +236,13 @@
 			by the servlet. In our example, when the "parsepath" node reject to serve the request, "__null__" pipe will be activated. In this case,
 			we should return a forbiden response.
 			<p>
-				<code class="pss">	PathParser "__null__" -&gt; "403" ResponseGenerator;</code>
+				<code class="pss">PathParser "__null__" -&gt; "403" ResponseGenerator;</code>
 			</p>
 			<p>
 			Finally, let's think about what if the server gets a malformed HTTP request from network. In this case, the "error" pipe of "parsereq" will
 			have some output, and we should let the response render know about this and produce a bad request response.
 			<p>
-				<code class="pss">	RequestParser "error" -&gt; "400" ResponseGenerator;</code>
+				<code class="pss">RequestParser "error" -&gt; "400" ResponseGenerator;</code>
 			</p>
 		</p>
 		<h2 class="section">How does our server listening to the outside</h2>
@@ -245,7 +252,7 @@
 			actual IO operation. As you can imagine, the TCP protocol is wrapped by the ITC module called TCP Pipe. And the TCP module is responsible for listening
 			to the outside of the world. 
 			<p>
-				<code class="pss">	insmod "tcp_pipe 8080";</code>
+				<code class="pss">insmod "tcp_pipe 8080";</code>
 			</p>
 		</p>
 		<p>
@@ -256,8 +263,8 @@
 		<p>
 			You are able to initialize a TLS module over a TCP module to enable the HTTPS support.
 			<p>
-				<code class="pss">	insmod "tcp_pipe --slave 4343";
-	insmod "tls_pipe cert=cert.pem key=key.pem pipe.tcp.port_4343";</code>
+				<code class="pss">insmod "tcp_pipe --slave 4343";
+insmod "tls_pipe cert=cert.pem key=key.pem pipe.tcp.port_4343";</code>
 			</p>
 		</p>
 		</p>
