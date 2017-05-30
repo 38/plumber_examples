@@ -48,6 +48,7 @@ typedef struct {
 		GET_T,
 		GET_URL_WS,
 		URL,
+		GET_PARAM,
 		URL_VER_WS,
 		VER,
 		VER_CR,
@@ -168,7 +169,8 @@ int _exec(void* data)
 				case GET_E: _EXPECT('E', GET_T);
 				case GET_T: _EXPECT('T', GET_URL_WS);
 				case GET_URL_WS: _WS(URL);
-				case URL: _FILL_BUFFER(ch == ' ' || ch == '\t', path, URL_VER_WS, ch);
+				case URL: _FILL_BUFFER(ch == ' ' || ch == '\t' || ch == '?', path, GET_PARAM, ch);
+				case GET_PARAM: _SKIP(ch == ' ' || ch == '\t'); state->ps = URL_VER_WS; 
 				case URL_VER_WS: _WS(VER);
 				case VER: _SKIP(ch == '\r');
 				case VER_CR: _EXPECT('\r', VER_LF);
