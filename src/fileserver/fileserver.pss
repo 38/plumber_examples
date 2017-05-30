@@ -14,7 +14,7 @@ fileserver = {
 	guessmime := "filesystem/mimetype " + mime_type_file;
 	readfile  := "filesystem/readfile " + server_base_dir;
 	genres    := " response" @[color = green];
-    error     := "dataflow/firstnonempty 4";
+	error     := "dataflow/firstnonempty 4";
 
 	/* Setup normal logic */
 	() -> "request" parsereq "path" -> "origin" parsepath {
