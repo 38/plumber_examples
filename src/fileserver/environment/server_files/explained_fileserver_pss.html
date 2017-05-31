@@ -28,7 +28,7 @@
 				color: blue;
 			}
 		</style>
-		<script src="/pss-syntax.js"></script>
+		<script src="pss-syntax.js"></script>
 		<script>
 			window.onload = function() {
 				var sections = document.getElementsByClassName("section");
@@ -50,7 +50,7 @@
 		</script>
 	</head>
 	<body>
-		<h1>Static File Server Example (<a href="/fileserver.pss.txt">fileserver.pss</a>)</h1>
+		<h1>Static File Server Example (<a href="fileserver.pss.txt">fileserver.pss</a>)</h1>
 		<ul id="toc">
 		</ul>
 		<h2 class="section">What is it?</h2>
@@ -75,7 +75,7 @@
 		<p>
 			The Plumber framework provides a visualization of the service we have made. In the graph, each servlet is represtented by 
 			a node. There's three rows in the servlet node.
-			<center><img src="/servlet_repr.png" style="width:300px"/></center>
+			<center><img src="servlet_repr.png" style="width:300px"/></center>
 			<ul>
 				<li>First row is the list of input ports</li>
 				<li>The second row has two signal pipe "N" and "E", which we will discuss later, and the name of the servlet</li>
@@ -83,7 +83,7 @@
 			</ul>
 			Let's look at the service graph that is currently serving traffic.
 		</p>
-		<center><img src="/service_graph.png" style="width:400px"/></center>
+		<center><img src="service_graph.png" style="width:400px"/></center>
 		<p>
 			The request comes from the input, which can be either port 8080 for HTTP and port 4343 for HTTPS. When the request
 			comes from network, it will be handled by the request parser. And the content of the request will be 
@@ -205,7 +205,7 @@ nodeA "output2" -&gt; "input2" nodeB;</code>
 	} ResponseGenerator "output" -&gt; ();
 }</code>
 		</p>
-		<center><img src="/service_graph.png" style="width:400px"/></center>
+		<center><img src="service_graph.png" style="width:400px"/></center>
 		<h2 class="section">Adding error handling to the service</h2>
 		<p>	
 			Here's one more question remaining, what if the server is error. Actually, the 404 error is handled by read file. However
