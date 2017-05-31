@@ -16,17 +16,17 @@ function highLightPssCode() {
 				   (ch >= 'A' && ch <= 'Z') ||
 					ch == '_')
 				{
-					transformed += "<span class=\"pss-variable\">" + ch
+					transformed += "[[[[[span class=\"pss-variable\"]]]]]" + ch
 					state = sid;
 				}
 				else if(ch == '"')
 				{
-					transformed += "<span class=\"pss-string\">\""
+					transformed += "[[[[[span class=\"pss-string\"]]]]]\""
 					state = sstr;
 				}
 				else if(ch == '/')
 				{
-					transformed += "<span class=\"pss-comment\">\/";
+					transformed += "[[[[[span class=\"pss-comment\"]]]]]\/";
 					state = scm;
 				}
 				else transformed += ch;
@@ -35,7 +35,7 @@ function highLightPssCode() {
 			{
 				if(ch == '\"') 
 				{
-					transformed += "\"</span>"
+					transformed += "\"[[[[[/span]]]]]"
 					state = soth;
 				}
 				else transformed += ch;
@@ -50,7 +50,7 @@ function highLightPssCode() {
 				}
 				else 
 				{
-					transformed += "</span>"
+					transformed += "[[[[[/span]]]]]"
 					state = soth;
 					i --;
 				}
@@ -59,14 +59,14 @@ function highLightPssCode() {
 			{
 				if(ch == '\n') 
 				{
-					transformed += "</span>\n"
+					transformed += "[[[[[/span]]]]]\n"
 					state = soth;
 				}
 				else transformed += ch;
 			}
 		}
 
-		return transformed.replace(/->/g, "-&gt;");
+		return transformed.replace(/>/g, "&gt;").replace(/\[\[\[\[\[/g, "<").replace(/\]\]\]\]\]/g, ">");
 	};
 	var codes =  document.getElementsByClassName("pss");
 	for(var i = 0; i < codes.length; i ++)
