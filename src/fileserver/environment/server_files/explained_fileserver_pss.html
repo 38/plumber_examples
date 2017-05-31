@@ -199,7 +199,7 @@ nodeA "output2" -&gt; "input2" nodeB;</code>
 	ResponseGenerator := "genres";
 
 	// Definition of the interconnections
-	() -&gt; "request" ResponseGenerator "path" -&gt; "origin" PathParser {
+	() -&gt; "request" RequestParser "path" -&gt; "origin" PathParser {
 			"relative" -&gt; "path" FileReader "result" -&gt; "file";
 			"extname" -&gt; "extname" MIMEGuesser "mimetype" -&gt; "mime";
 	} ResponseGenerator "output" -&gt; ();
