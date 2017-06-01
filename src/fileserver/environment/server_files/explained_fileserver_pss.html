@@ -56,7 +56,8 @@
 		<h2 class="section">What is it?</h2>
 		<p>
 			You are now reading the documentation for the HTTP server that serves static content, which is written to 
-			demostrate the Plumber Software Infrastructure. To learn more about the demo, please go to
+			demostrate the <a href="https://github.com/38/plumber">Plumber Software Infrastructure</a>. To learn more 
+			about the demo, please go to
 			<a href="https://github.com/38/plumber_examples/tree/master/src/fileserver">the example code on github</a>
 		</p>
 		<p>
@@ -172,13 +173,19 @@
 			Once we have all the servlet nodes we need in the graph, we will be able to connect them and build the service we want. The basic syntax
 			to connect two endpoints are quite straight forward. It looks like:
 			<p>
-				<code class="pss">upstream_node "output" -&gt; "input" downstream_node;
-() -&gt; "input" input_node;
-output_node "output" -&gt; ();</code>
+				<code class="pss">upstream_node "output" -&gt; "input" downstream_node;</code>
+			</p>
+			Similarly, use the following syntax to define the input of the entire service
+			<p>
+				<code class="pss">() -&gt; "input" input_node;</code>
+			</p>
+			and output of the service service.
+			<p>
+				<code class="pss">output_node "output" -&gt; ();</code>
 			</p>
 		</p>
 		<p>
-			To make life easier, the PSS provides syntactical sugar to reduce the code that is needed. First, we can chaining the
+			To make life easier, the PSS provides syntactical sugar to reduce the code to write. First, we can chaining the
 			pipe definition. For example
 			<p>
 				<code class="pss">nodeA "output" -&gt; "input" nodeB "output" -&gt; "input" nodeC;</code>
