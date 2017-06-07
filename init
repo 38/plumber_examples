@@ -6,7 +6,7 @@ SOURCEDIR=`pwd`/dependencies
 function print_help() {
 	echo "Initialize the Plumber Isolated Environment"
 	echo "--real[=<prefix>]       Use the real environment, if prefix is missing use Plumber at /"
-	echo "--javascript            Enable Javascript servlet support"
+	echo "--javascript=[<prefix>] Enable Javascript servlet support"
 	echo "--test                  Run test cases before we start the environment"
 	echo "--recompile             Recompile the code"
 	echo "--reconfigure           Reconfigure the Plumber source code"
@@ -17,17 +17,20 @@ function print_help() {
 	echo "--shell=<shell-command> Instead of using zsh, use the given shell"
 	echo "--cc=<C-compiler>       Use the given C compiler rather than GCC"
 	echo "--cxx=<C++-compiler>    Use the given C++ compiler rather than G++"
+	echo "--cflags=<flags>        Append C Compiler Flags"
+	echo "--cxxflags=<flags>      Append C++ Compiler Flags"
+	echo "--ldflags=<flags>       Append Linker Flags"
 	echo "--log=<log-level>       Use the given log level for Plumber logging system"
-	echo "--optimized             Pass -O3 to the compiler"
+	echo "--optimization=<level>  Set the level of optimization (from 0 to 4)"
 	echo "--gproftools            Compile code with Google profiling tools"
 	echo "--help                  Show this help message"
 }
 
 function argv() {
 	if [ $# = 2 ] && [ x"$1" = "x--string" ]; then
-		echo $2 | awk -F= '{print $2}'
+		echo $2 | sed 's/^[^=]*=\(.*\)$/\1/g'
 	else
-		realpath $(eval "echo $(echo $1 | awk -F= '{print $2}')")
+		realpath $(eval "echo $(echo $1 | sed 's/^[^=]*=\(.*\)$/\1/g')")
 	fi
 }
 
@@ -70,7 +73,12 @@ function parse_options() {
 			--real=* )
 				realenv="$(argv ${arg})";;;
 			--javascript ) 
-				javascript="yes";;;
+				javascript="yes"
+				need reconfigure;;;
+			--javascript=* )
+				javascript="external"
+				v8prefix="$(argv --string ${arg})"
+				need reconfigure;;;
 			--reconfigure )
 				need reconfigure;;;
 			--recompile )
@@ -102,11 +110,20 @@ function parse_options() {
 			--cxx=* )
 				CXX="$(argv --string ${arg})"
 				need reconfigure;;;
+			--cflags=* )
+				CFLAGS="$(strip "${CFLAGS} $(argv --string ${arg})")"
+				need reconfigure;;;
+			--cxxflags=* )
+				CXXFLAGS="$(strip "${CXXFLAGS} $(argv --string ${arg})")"
+				need reconfigure;;;
+			--ldflags=* )
+				LIBS="$(strip "${LIBS} $(argv --string ${arg})")"
+				need reconfigure;;;
 			--log=* )
 				LOG="$(argv --string ${arg})"
 				need reconfigure;;;
-			--optimized )
-				OPT=4
+			--optimization=[0-4] )
+				OPT="$(argv --string ${arg})"
 				need reconfigure;;;
 			--help )
 				print_help
@@ -158,6 +175,11 @@ if [ "x${javascript}" = "xyes" ]
 then
 	${SOURCEDIR}/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
 	JS_PARAM=(-DPLUMBER_V8_PREFIX=${INSTALLDIR} -Dbuild_javascript=yes)
+fi
+
+if [ "x${javascript}" = "xexternal" ]
+then
+	JS_PARAM=(-DPLUMBER_V8_PREFIX=${v8prefix} -Dbuild_javascript=yes)
 fi
 
 if [ ! -z "${commit}" ]

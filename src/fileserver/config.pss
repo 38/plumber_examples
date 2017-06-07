@@ -22,6 +22,7 @@ if (pipe.mem == undefined) insmod "mem_pipe";
 if (pipe.tcp.port_8080 == undefined) insmod "tcp_pipe 8080";
 pipe.tcp.port_8080.size = 65536;
 pipe.tcp.port_8080.ttl = 240;
+pipe.tcp.port_8080.reuseaddr = 1;
 
 // Now setup the HTTPS support
 if (pipe.tcp.port_4343 == undefined && pipe.tls.pipe.tcp.port_4343 == undefined)
@@ -35,6 +36,7 @@ if (pipe.tcp.port_4343 == undefined && pipe.tls.pipe.tcp.port_4343 == undefined)
 	// Step3: (Optional) Configure the transporation layer
 	pipe.tcp.port_4343.size = 65536;
 	pipe.tcp.port_4343.ttl  = 240;
+	pipe.tcp.port_4343.reuseaddr = 1;
 	// Step4: (Optional) Configure the TLS module
 	//        a) To add a certification to the cert chain
 	#pipe.tsl.pipe.tcp.port_4343.extra_cert_chain = "path/to/cert1:path/to/cert2:.....";
