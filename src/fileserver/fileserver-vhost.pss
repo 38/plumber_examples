@@ -4,57 +4,96 @@
  */
 
 /* The Virtual Hosting Static File Server Example */
+import("service");
+import("config");
 
-include "config.pss"
+var create_service = function(site_list)
+{
+	var num_sites = len(site_list);
 
-fileserver = {
-	parsereq    := "getpath" @[color = green];
-	parsepath   := "filesystem/parsepath --ext-name";
-	guessmime   := "filesystem/mimetype " + mime_type_file;
-	readfile_1  := "filesystem/readfile " + server_base_dir;
-	readfile_2  := "filesystem/readfile " + server_base_dir_2;
-	selector    := "dataflow/demux localhost:8080"
-	merger      := "dataflow/firstnonempty 2"
-	error       := "dataflow/firstnonempty 7";
-	genres      := "response" @[color = green];
-
-	/* Parse the request */
-	() -> "request" parsereq {
-		"path" -> "origin" parsepath {
-			/* This is the dataflow for the mime type manipulation */
-			"extname" -> "extname" guessmime "mimetype" -> "mime" genres;
-			/* Here we need to feed the demux */
-			"relative" -> "data" selector;
-		};
-		"host" -> "cond" selector;
-	};
-	
-	/* Read the file */
-	selector {
-		"out0"    -> "path" readfile_1 "result" -> "in0"
-		"default" -> "path" readfile_2 "result" -> "in1"
-	} merger "out" -> "file" genres "output" -> ();
-
-	/* Handle the internal error */
+	if(site_list["__default__"] == undefined) 
 	{
-		parsereq   "__error__" -> "in0";
-		parsepath  "__error__" -> "in1";
-		guessmime  "__error__" -> "in2";
-		readfile_1 "__error__" -> "in3";
-		readfile_2 "__error__" -> "in4";
-		selector   "__error__" -> "in5";
-		merger     "__error__" -> "in6";
-	} error "out" -> "500" genres;
+		print("Site list must have a default site");
+		return undefined;
+	}
 
-	/* Handle the 400 error */
-	parsereq "error" -> "400" genres;
+	var selector_init_arg = "dataflow/demux";
 
-	/* Handle the 403 error */
-	parsepath "__null__" -> "403" genres;
-};
+	for(var site in site_list)
+	{
+		if(site != "__default__")
+			selector_init_arg += " " + site;
+	}
+
+	var fileserver = {
+		parsereq    := "getpath";
+		parsepath   := "filesystem/parsepath --ext-name";
+		guessmime   := "filesystem/mimetype " + mime_type_file;
+		selector    := selector_init_arg; 
+		merger      := "dataflow/firstnonempty " + num_sites;
+		error       := "dataflow/firstnonempty " + (5 + num_sites);
+		genres      := "response";
+
+		/* Parse the request */
+		() -> "request" parsereq {
+			"path" -> "origin" parsepath {
+				/* This is the dataflow for the mime type manipulation */
+				"extname" -> "extname" guessmime "mimetype" -> "mime" genres;
+				/* Here we need to feed the demux */
+				"relative" -> "data" selector;
+			};
+			"host" -> "cond" selector;
+		};
+		
+		merger "out" -> "file" genres "output" -> ();
+
+		/* Handle the internal error */
+		{
+			parsereq   "__error__" -> "in0";
+			parsepath  "__error__" -> "in1";
+			guessmime  "__error__" -> "in2";
+			selector   "__error__" -> "in3";
+			merger     "__error__" -> "in4";
+		} error "out" -> "500" genres;
+
+		/* Handle the 400 error */
+		parsereq "error" -> "400" genres;
+
+		/* Handle the 403 error */
+		parsepath "__null__" -> "403" genres;
+	};
+
+	var id = 0;
+	var outid = 0;
+	for(var site in site_list)
+	{
+		var name = "readfile_" + id;
+		var selector_port = "out" + outid;
+
+		if(site == "__default__") selector_port = "default";
+		else outid ++;
+
+		fileserver[name] = "filesystem/readfile " + site_list[site];
+
+		fileserver["@selector"][selector_port] = name + "@path";
+		fileserver["@" + name] = {
+			result   : "merger@in" + id,
+			__error__: "error@in" + (5 + id)
+		};
+
+		id++;
+	}
+
+	return fileserver;
+}
+
+server = create_service({
+	"localhost:8080": server_base_dir,
+	__default__     : server_base_dir_2
+});
 
 /* dump the visualization graph */
-visualize fileserver >>> "/dev/stdout";
+Service.visualize(server);
 
 /* then start the file server */
-start fileserver
+Service.start(server);

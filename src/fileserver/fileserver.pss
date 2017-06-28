@@ -5,15 +5,16 @@
 /* The main script for the static file server */
 
 // Load the configuration
-include "config.pss"
+import("service");
+import("config.pss");
 
 //define the file server
 fileserver = {
-	RequestParser      := "getpath" @[color = green];
+	RequestParser      := "getpath";
 	PathParser         := "filesystem/parsepath --ext-name";
 	MIMEGuesser        := "filesystem/mimetype " + mime_type_file;
 	FileReader         := "filesystem/readfile " + server_base_dir;
-	ResponseGenerator  := " response" @[color = green];
+	ResponseGenerator  := " response";
 
 	/* Setup normal logic */
 	() -> "request" RequestParser "path" -> "origin" PathParser {
@@ -39,7 +40,7 @@ fileserver = {
 };
 
 /* (Optional) dump the visualization graph */
-visualize fileserver >>> "/dev/stdout";
+Service.visualize(fileserver);
 
 /* start the file server */
-start fileserver
+Service.start(fileserver);

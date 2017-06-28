@@ -12,47 +12,56 @@ server_base_dir_2 = basedir + "/server_files_2"; //Another base dir, only used b
 // Make sure the Plumber Standard Service Module, a.k.a PSSM has been loaded
 // The PSSM provides a lot of standard framework service, like framework managed
 // memory pool, etc.
-if (plumber.std == undefined) insmod "pssm";
+if (plumber.std == undefined) insmod("pssm");
 
 // Make sure we have loaded the Memory Pipe Module, this is the standard Inter-task
 // Communication method we need to use
-if (pipe.mem == undefined) insmod "mem_pipe";
+if (pipe.mem == undefined) insmod("mem_pipe");
 
 // Setup our TCP module to accept HTTP requests from 8080 port
-if (pipe.tcp.port_8080 == undefined) insmod "tcp_pipe 8080";
-pipe.tcp.port_8080.size = 65536;
-pipe.tcp.port_8080.ttl = 240;
-pipe.tcp.port_8080.reuseaddr = 1;
+(function _configure_tcp(port) 
+{
+	var path = "pipe.tcp.port_" + port;
+	if($global[path] == undefined) 
+		insmod("tcp_pipe " + port);
+	$global[path + ".size"] = 65536;
+	$global[path + ".ttl"] = 240;
+	$global[path + ".reuseaddr"] = 1;
+})(8080);
 
 // Now setup the HTTPS support
-if (pipe.tcp.port_4343 == undefined && pipe.tls.pipe.tcp.port_4343 == undefined)
+(function _configue_tls(port)
 {
-	// Step1: Start a transporation layer in a slave mode
-	insmod "tcp_pipe --slave 4343";     	
-	// Step2: Wrap the transporation layer pipe with the tls_pipe module
-	ssl_cert = basedir + "/certs/cert.pem"
-	ssl_key  = basedir + "/certs/key.pem"
-	insmod "tls_pipe cert=" + ssl_cert + " key=" + ssl_key + " pipe.tcp.port_4343";
-	// Step3: (Optional) Configure the transporation layer
-	pipe.tcp.port_4343.size = 65536;
-	pipe.tcp.port_4343.ttl  = 240;
-	pipe.tcp.port_4343.reuseaddr = 1;
-	// Step4: (Optional) Configure the TLS module
-	//        a) To add a certification to the cert chain
-	#pipe.tsl.pipe.tcp.port_4343.extra_cert_chain = "path/to/cert1:path/to/cert2:.....";
-	
-	//        b) To disable a specified version of TLS/SSL
-	pipe.tls.pipe.tcp.port_4343.ssl2 = 0;
-	
-	//        c) To enable DHE algorithm, you should provide the DH parameter file, 
-	//          which you can get from "openssl dhparam -C <num-of-digits>"
-	#pipe.tls.pipe.tcp.port_4343.dhparam = "path/to/dhparam";
-	//        f) To enable ECDHE algorithm, you should provide the curve name, 
-	//          or set the curve name to auto
-	#pipe.tls.pipe.tcp.port_4343.ecdh_curve = "auto";
-	//        g) To select a cipher set, you should provide a cipher string defined by openssl
-	#pipe.tls.pipe.tcp.port_4343.cipher = "openssl-cipher-string";
-}
+	var tcp_path = "pipe.tcp.port_" + port;
+	var tls_path = "pipe.tls.pipe." + tcp_path;
+	if ($global[tcp_path] == undefined && $global[tls_path] == undefined)
+	{
+		// Step1: Start a transporation layer in a slave mode
+		insmod("tcp_pipe --slave " + port);
+		// Step2: Wrap the transporation layer pipe with the tls_pipe module
+		ssl_cert = basedir + "/certs/cert.pem"
+		ssl_key  = basedir + "/certs/key.pem"
+		insmod("tls_pipe cert=" + ssl_cert + " key=" + ssl_key + " " + tcp_path);
+		// Step3: (Optional) Configure the transporation layer
+		$global[tcp_path + ".size"] = 65536;
+		$global[tcp_path + ".ttl"] = 240;
+		$global[tcp_path + ".reuseaddr"] = 1;
+		// Step4: (Optional) Configure the TLS module
+		//        a) To add a certification to the cert chain
+		#pipe.tsl.pipe.tcp.port_4343.extra_cert_chain = "path/to/cert1:path/to/cert2:.....";
+		
+		//        b) To disable a specified version of TLS/SSL
+		$global[tls_path + ".ssl2"] = 0;
+		//        c) To enable DHE algorithm, you should provide the DH parameter file, 
+		//          which you can get from "openssl dhparam -C <num-of-digits>"
+		#pipe.tls.pipe.tcp.port_4343.dhparam = "path/to/dhparam";
+		//        f) To enable ECDHE algorithm, you should provide the curve name, 
+		//          or set the curve name to auto
+		#pipe.tls.pipe.tcp.port_4343.ecdh_curve = "auto";
+		//        g) To select a cipher set, you should provide a cipher string defined by openssl
+		#pipe.tls.pipe.tcp.port_4343.cipher = "openssl-cipher-string";
+	}
+})(4343);
 
 // Set the servlet search path, so that the framework will be able to find our servlet 
 runtime.servlet.path = "./bin:" + runtime.servlet.path;       // the servlet search path
@@ -60,4 +69,3 @@ runtime.servlet.path = "./bin:" + runtime.servlet.path;       // the servlet sea
 // Change the scheduler cofingurations
 scheduler.worker.default_itc_pipe = "pipe.mem";
 scheduler.worker.nthreads = 8;
-
