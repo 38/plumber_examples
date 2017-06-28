@@ -1,7 +1,9 @@
 #!env pscript
-insmod "pssm";
-insmod "mem_pipe";
-insmod "tcp_pipe 12345";
+import("service");
+
+insmod("pssm");
+insmod("mem_pipe");
+insmod("tcp_pipe 12345");
 runtime.servlet.path="./bin"
 
 graph = {
@@ -16,6 +18,4 @@ graph = {
 	} first "out" -> "in" write "out" -> ();
 };
 
-visualize graph >>> "/dev/stdout";
-
-start graph;
+Service.start(graph);
