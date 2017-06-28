@@ -83,7 +83,7 @@
 			a node.
 		</p>
 		<p>
-			<code class="pss">visualize service &gt;&gt;&gt; "path-to-the-output"</code>
+			<code class="pss">Service.visualize(service);"</code>
 		</p>
 		<p>
 			The following picture is a sample of visualization of a servlet node. There are three rows in the servlet node visualization.
@@ -296,7 +296,7 @@ nodeA "output2" -&gt; "input2" nodeB;</code>
 			The Plumber framework uses an unified pipelining interface, and below the interface, the IO Modules are used to perform the actual IO operation. 
 			The TCP protocol is wrapped by an IO module called TCP Pipe Module. And the module is responsible for listening to the outside of the world. 
 			<p>
-				<code class="pss">insmod "tcp_pipe 8080";</code>
+				<code class="pss">insmod("tcp_pipe 8080");</code>
 			</p>
 		</p>
 		<p>
@@ -308,8 +308,8 @@ nodeA "output2" -&gt; "input2" nodeB;</code>
 			Also we have a module called TLS module which implements TLS over other IO module. You are able to initialize a TLS module over a TCP module to 
 			enable the HTTPS support.
 			<p>
-				<code class="pss">insmod "tcp_pipe --slave 4343";
-insmod "tls_pipe cert=cert.pem key=key.pem pipe.tcp.port_4343";</code>
+				<code class="pss">insmod("tcp_pipe --slave 4343)";
+insmod("tls_pipe cert=cert.pem key=key.pem pipe.tcp.port_4343");</code>
 			</p>
 		</p>
 		</p>
