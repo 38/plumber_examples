@@ -98,6 +98,7 @@ int _exec(void* data)
 	char buffer[4096];
 	_state_t* state;
 	size_t rem = 0, sz = 0;
+	
 	pipe_cntl(sd->request, PIPE_CNTL_POP_STATE, &state);
 	/*
 	 * Example: Call the pipe specified control function
@@ -248,6 +249,20 @@ int _exec(void* data)
 	    _state_free(state);
 
 	pstd_type_instance_free(inst);
+
+
+#ifdef LOG_DEBUG_ENABLED
+	const char* modpath;
+
+	pipe_cntl(sd->request, PIPE_CNTL_MODPATH, &modpath);
+	LOG_DEBUG("Modpath = %s", modpath);
+	
+	char protobuf[32] = {};
+
+	pipe_cntl(sd->request, MODULE_TLS_CNTL_ALPNPROTO, protobuf, sizeof(protobuf));
+	LOG_DEBUG("ALPN Protocol = %s", protobuf);
+#endif
+
 
 	return 0;
 }

@@ -33,7 +33,7 @@ if (pipe.mem == undefined) insmod("mem_pipe");
 (function _configue_tls(port)
 {
 	var tcp_path = "pipe.tcp.port_" + port;
-	var tls_path = "pipe.tls.pipe." + tcp_path;
+	var tls_path = "pipe.tls." + tcp_path;
 	if ($global[tcp_path] == undefined && $global[tls_path] == undefined)
 	{
 		// Step1: Start a transporation layer in a slave mode
@@ -60,6 +60,8 @@ if (pipe.mem == undefined) insmod("mem_pipe");
 		#pipe.tls.pipe.tcp.port_4343.ecdh_curve = "auto";
 		//        g) To select a cipher set, you should provide a cipher string defined by openssl
 		#pipe.tls.pipe.tcp.port_4343.cipher = "openssl-cipher-string";
+		//        h) To enable the ALPN protocol negotiation,you should provide a list of protocol strings in preference order
+		$global[tls_path + ".alpn_protos"] = "http/1.1 h2 spdy/3";
 	}
 })(4343);
 
