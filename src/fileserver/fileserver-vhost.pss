@@ -52,14 +52,10 @@ var get_reader = function(site_list)
 		if(site == "__default__") selector_port = "default";
 		else outid ++;
 
-		reader[name] = "filesystem/readfile " + site_list[site];
-
-		reader["@selector"][selector_port] = name + "@path";
-		reader["@" + name] = {
-			result   : "merger@in" + id,
-			__error__: "error@in" + (2 + id)
-		};
-
+		Service.add_node(reader, name, "filesystem/readfile " + site_list[site]);
+		Service.add_pipe(reader, "selector", selector_port, "path", name);
+		Service.add_pipe(reader, name, "result", "in" + id, "merger");
+		Service.add_pipe(reader, name, "__error__", "in" + (2 + id), "error");
 		id++;
 	}
 

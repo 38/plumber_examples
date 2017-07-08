@@ -23,7 +23,6 @@ fileserver = {
 	} ResponseGenerator "output" -> ();
 
 
-	ErrorCombiner      := "dataflow/firstnonempty 4";
 	/* What if we got an invalid request */
 	RequestParser "error" -> "400" ResponseGenerator;
 
@@ -32,13 +31,12 @@ fileserver = {
 
 	/* Let's handle the unexpected service error */
 	{
-		PathParser    "__error__" -> "in0";
-		RequestParser "__error__" -> "in1";
-		MIMEGuesser   "__error__" -> "in2";
-		FileReader    "__error__" -> "in3";
-	} ErrorCombiner "out" -> "500" ResponseGenerator;
+		PathParser    "__error__" -> "500";
+		RequestParser "__error__" -> "500";
+		MIMEGuesser   "__error__" -> "500";
+		FileReader    "__error__" -> "500";
+	} ResponseGenerator;
 };
-
 /* (Optional) dump the visualization graph */
 Service.visualize(fileserver);
 
