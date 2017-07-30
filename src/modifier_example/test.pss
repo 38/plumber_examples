@@ -8,11 +8,12 @@ runtime.servlet.path=runtime.servlet.path + ":./bin"
 
 graph = {
 	read  := "readsock";
-	extractor := "dataflow/modify color.b"
+	extractor := "dataflow/modify color.b color.g"
 	write := "writesock";
 	() -> "in" read {
 		"out"    -> "base" 
 		"bout"   -> "color.b"
+		"bout"   -> "color.g"
 	} extractor "output" -> "in" write "out" -> ();
 };
 
