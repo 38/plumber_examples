@@ -1,0 +1,16 @@
+#!env pscript
+import("service");
+
+insmod("pssm");
+insmod("mem_pipe");
+insmod("tcp_pipe 12345");
+runtime.servlet.path=runtime.servlet.path + ":./bin"
+
+graph = {
+	read  := "readsock";
+	json  := "typing/conversion/json_parse out:graphics/FlattenColoredTriangle3D"
+	write := "writesock";
+	() -> "in" read "out" -> "json" json "out" -> "in" write "out" -> ();
+};
+
+Service.start(graph);
