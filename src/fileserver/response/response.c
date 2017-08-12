@@ -29,7 +29,7 @@ int init(uint32_t argc, char const* const* argv, void* ctxbuf)
 {
 	context_t* ctx = (context_t*)ctxbuf;
 
-	ctx->file   = pipe_define("file", PIPE_INPUT, "plumber/std_servlet/filesystem/readfile/Result");
+	ctx->file   = pipe_define("file", PIPE_INPUT, "plumber/std_servlet/filesystem/readfile/v0/Result");
 	ctx->mime   = pipe_define("mime", PIPE_INPUT, "plumber/std/request_local/String");
 	ctx->output = pipe_define("output", PIPE_OUTPUT | PIPE_ASYNC, NULL);
 	ctx->interal_err = pipe_define("500", PIPE_INPUT, NULL);
