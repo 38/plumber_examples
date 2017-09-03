@@ -1,0 +1,18 @@
+#!env pscript
+import("service");
+
+insmod("pssm");
+insmod("mem_pipe");
+insmod("tcp_pipe 12345");
+runtime.servlet.path=runtime.servlet.path + ":./bin"
+
+graph = {
+	read  := "readsock";
+	extractor := "dataflow/extract color"
+	async := "async 1";
+	write := "writesock";
+	() -> "in" read "out" -> "input" extractor "output" -> 
+		  "in" async "out0" -> "in" write "out" -> ();
+};
+
+Service.start(graph);
