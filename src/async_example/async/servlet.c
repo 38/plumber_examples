@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <pservlet.h>
 #include <pstd.h>
+
+#include <unistd.h>
 /**
  * @brief The servlet context
  **/
@@ -51,7 +53,9 @@ static int _async_exec(const async_handle_t* handle, void* buf)
 {
 	(void)handle;
 	(void)buf;
+	usleep(20000000);
 	LOG_DEBUG("async exec called");
+	return 0;
 }
 
 static int _async_cleanup(const async_handle_t* handle, void* buf, void* ctxbuf)
@@ -60,6 +64,14 @@ static int _async_cleanup(const async_handle_t* handle, void* buf, void* ctxbuf)
 	(void)buf;
 	(void)ctxbuf;
 	LOG_DEBUG("async cleanup called");
+	return 0;
+}
+
+static inline int _sync_exec(void* buf)
+{
+	(void)buf;
+	usleep(20000000);
+	return 0;
 }
 
 SERVLET_DEF = {
@@ -71,5 +83,6 @@ SERVLET_DEF = {
 	.unload = _unload,
 	.async_setup = _async_init,
 	.async_exec  = _async_exec,
-	.async_cleanup = _async_cleanup
+	.async_cleanup = _async_cleanup,
+	.exec = _sync_exec
 };

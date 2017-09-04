@@ -3,8 +3,9 @@ import("service");
 
 insmod("pssm");
 insmod("mem_pipe");
-insmod("tcp_pipe 12345");
+insmod("tcp_pipe 1234");
 runtime.servlet.path=runtime.servlet.path + ":./bin"
+scheduler.async.nthreads = 32;
 
 graph = {
 	read  := "readsock";
