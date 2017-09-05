@@ -5,15 +5,23 @@ insmod("pssm");
 insmod("mem_pipe");
 insmod("tcp_pipe 1234");
 runtime.servlet.path=runtime.servlet.path + ":./bin"
-scheduler.async.nthreads = 32;
+scheduler.async.nthreads = 5;
+type = argv[1];
 
-graph = {
-	read  := "readsock";
-	extractor := "dataflow/extract color"
-	async := "async 1";
-	write := "writesock";
-	() -> "in" read "out" -> "input" extractor "output" -> 
-		  "in" async "out0" -> "in" write "out" -> ();
-};
+if(type != "async" && type != "sync" && type != "async_wait")
+{
+	print("Missing sleep servlet behavior: async|sync|async_wait");
+}
+else
+{
+	graph = {
+		read  := "readsock";
+		extractor := "dataflow/extract color"
+		sleep := "sleep "+ type;
+		write := "writesock";
+		() -> "in" read "out" -> "input" extractor "output" -> 
+			  "in" sleep "out" -> "in" write "out" -> ();
+	};
 
-Service.start(graph);
+	Service.start(graph);
+}

@@ -1,5 +1,5 @@
-SERVLETS=readsock writesock async
-CFLAGS=-g
+SERVLETS=readsock writesock sleep
+CFLAGS=-g -Wall
 
 include ../../shared.mk
 

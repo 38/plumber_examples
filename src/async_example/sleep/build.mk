@@ -1,2 +1,2 @@
 SRC=servlet.c
-TARGET=async
+TARGET=sleep
