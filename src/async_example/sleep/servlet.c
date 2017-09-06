@@ -61,7 +61,6 @@ static int _async_init(async_handle_t* handle, void* buf, void* ctxbuf)
 	context_t* ctx = (context_t*)ctxbuf;
 	async_t* async_buf = (async_t*)buf;
 	async_buf->wait = (ctx->type == TYPE_ASYNC_WAIT);
-	async_cntl(handle, ASYNC_CNTL_CANCEL, 0);
 	LOG_DEBUG("async init called");
 	return 0;
 }
@@ -69,7 +68,7 @@ static int _async_init(async_handle_t* handle, void* buf, void* ctxbuf)
 static void* _do_sleep(void* args)
 {
 	async_handle_t* handle = (async_handle_t*)args;
-	usleep(20000000);
+	usleep(1000000);
 	async_cntl(handle, ASYNC_CNTL_NOTIFY_WAIT, 0);
 	return 0;
 }
@@ -80,7 +79,7 @@ static int _async_exec(async_handle_t* handle, void* buf)
 	async_t* data = (async_t*)buf;
 	if(!data->wait)
 	{
-		usleep(20000000);
+		usleep(1000000);
 	}
 	else
 	{
@@ -112,7 +111,7 @@ static int _async_cleanup(async_handle_t* handle, void* buf, void* ctxbuf)
 static inline int _sync_exec(void* buf)
 {
 	(void)buf;
-	usleep(20000000);
+	usleep(1000000);
 	return 0;
 }
 

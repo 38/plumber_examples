@@ -14,7 +14,7 @@ fileserver = {
 	PathParser         := "filesystem/parsepath --ext-name";
 	MIMEGuesser        := "filesystem/mimetype " + mime_type_file;
 	FileReader         := "filesystem/readfile " + server_base_dir;
-	ResponseGenerator  := " response";
+	ResponseGenerator  := "response";
 
 	/* Setup normal logic */
 	() -> "request" RequestParser "path" -> "origin" PathParser {
