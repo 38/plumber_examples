@@ -30,40 +30,44 @@ if (pipe.mem == undefined) insmod("mem_pipe");
 })(8080);
 
 // Now setup the HTTPS support
-(function _configue_tls(port)
+if(module.binary.has_tls_pipe == 1)
 {
-	var tcp_path = "pipe.tcp.port_" + port;
-	var tls_path = "pipe.tls." + tcp_path;
-	if ($global[tcp_path] == undefined && $global[tls_path] == undefined)
+	(function _configue_tls(port)
 	{
-		// Step1: Start a transporation layer in a slave mode
-		insmod("tcp_pipe --slave " + port);
-		// Step2: Wrap the transporation layer pipe with the tls_pipe module
-		ssl_cert = basedir + "/certs/cert.pem"
-		ssl_key  = basedir + "/certs/key.pem"
-		insmod("tls_pipe cert=" + ssl_cert + " key=" + ssl_key + " " + tcp_path);
-		// Step3: (Optional) Configure the transporation layer
-		$global[tcp_path + ".size"] = 65536;
-		$global[tcp_path + ".ttl"] = 240;
-		$global[tcp_path + ".reuseaddr"] = 1;
-		// Step4: (Optional) Configure the TLS module
-		//        a) To add a certification to the cert chain
-		#pipe.tsl.pipe.tcp.port_4343.extra_cert_chain = "path/to/cert1:path/to/cert2:.....";
-		
-		//        b) To disable a specified version of TLS/SSL
-		$global[tls_path + ".ssl2"] = 0;
-		//        c) To enable DHE algorithm, you should provide the DH parameter file, 
-		//          which you can get from "openssl dhparam -C <num-of-digits>"
-		#pipe.tls.pipe.tcp.port_4343.dhparam = "path/to/dhparam";
-		//        f) To enable ECDHE algorithm, you should provide the curve name, 
-		//          or set the curve name to auto
-		#pipe.tls.pipe.tcp.port_4343.ecdh_curve = "auto";
-		//        g) To select a cipher set, you should provide a cipher string defined by openssl
-		#pipe.tls.pipe.tcp.port_4343.cipher = "openssl-cipher-string";
-		//        h) To enable the ALPN protocol negotiation,you should provide a list of protocol strings in preference order
-		$global[tls_path + ".alpn_protos"] = "http/1.1 h2 spdy/3";
-	}
-})(4343);
+		var tcp_path = "pipe.tcp.port_" + port;
+		var tls_path = "pipe.tls." + tcp_path;
+		if ($global[tcp_path] == undefined && $global[tls_path] == undefined)
+		{
+			// Step1: Start a transporation layer in a slave mode
+			insmod("tcp_pipe --slave " + port);
+			// Step2: Wrap the transporation layer pipe with the tls_pipe module
+			ssl_cert = basedir + "/certs/cert.pem"
+			ssl_key  = basedir + "/certs/key.pem"
+			insmod("tls_pipe cert=" + ssl_cert + " key=" + ssl_key + " " + tcp_path);
+			// Step3: (Optional) Configure the transporation layer
+			$global[tcp_path + ".size"] = 65536;
+			$global[tcp_path + ".ttl"] = 240;
+			$global[tcp_path + ".reuseaddr"] = 1;
+			// Step4: (Optional) Configure the TLS module
+			//        a) To add a certification to the cert chain
+			#pipe.tsl.pipe.tcp.port_4343.extra_cert_chain = "path/to/cert1:path/to/cert2:.....";
+			
+			//        b) To disable a specified version of TLS/SSL
+			$global[tls_path + ".ssl2"] = 0;
+			//        c) To enable DHE algorithm, you should provide the DH parameter file, 
+			//          which you can get from "openssl dhparam -C <num-of-digits>"
+			#pipe.tls.pipe.tcp.port_4343.dhparam = "path/to/dhparam";
+			//        f) To enable ECDHE algorithm, you should provide the curve name, 
+			//          or set the curve name to auto
+			#pipe.tls.pipe.tcp.port_4343.ecdh_curve = "auto";
+			//        g) To select a cipher set, you should provide a cipher string defined by openssl
+			#pipe.tls.pipe.tcp.port_4343.cipher = "openssl-cipher-string";
+			//        h) To enable the ALPN protocol negotiation,you should provide a list of protocol strings in preference order
+			$global[tls_path + ".alpn_protos"] = "http/1.1 h2 spdy/3";
+		}
+	})(4343);
+}
+else print("TLS module is not avaiable in current system, TLS support disabled");
 
 // Set the servlet search path, so that the framework will be able to find our servlet 
 runtime.servlet.path = "./bin:" + runtime.servlet.path;       // the servlet search path
