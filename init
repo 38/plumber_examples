@@ -80,6 +80,10 @@ function parse_options() {
 				v8prefix="$(argv --string ${arg})"
 				need reconfigure;;;
 			--reconfigure )
+				cmake_param=""
+				need reconfigure;;;
+			--reconfigure=* )
+				cmake_param="$(argv --string ${arg})"
 				need reconfigure;;;
 			--recompile )
 				need recompile;;;
@@ -200,7 +204,16 @@ if [ "x${reconfigure}" = "xyes" ]
 then
 	mkdir -p ${BUILDDIR}/plumber || exit 1
 	pushd ${BUILDDIR}/plumber
-	O=${OPT} L=${LOG} CC=${CC} CXX=${CXX} LIBS=${LIBS} CFLAGS=${CFLAGS} cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} ${JS_PARAM} ${SOURCEDIR}/plumber || exit 1
+	export O=${OPT} 
+	export L=${LOG} 
+	export CC=${CC} 
+	export CXX=${CXX} 
+	export LIBS=${LIBS} 
+	export CFLAGS=${CFLAGS} 
+	echo "-DCMAKE_INSTALL_PREFIX=${INSTALLDIR}
+${cmake_param}
+${JS_PARAM}
+${SOURCEDIR}/plumber" | xargs cmake 	
 	popd
 fi
 
