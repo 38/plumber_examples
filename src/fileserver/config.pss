@@ -71,3 +71,4 @@ runtime.servlet.path = "./bin:" + runtime.servlet.path;       // the servlet sea
 // Change the scheduler cofingurations
 scheduler.worker.default_itc_pipe = "pipe.mem";
 scheduler.worker.nthreads = 8;
+scheduler.async.nthreads = 1;
