@@ -27,6 +27,9 @@ if (pipe.mem == undefined) insmod("mem_pipe");
 	$global[path + ".size"] = 65536;
 	$global[path + ".ttl"] = 240;
 	$global[path + ".reuseaddr"] = 1;
+	/* If there are too many connections, it's possible that the event loop become the bottleneck.
+	 * In this case we could add an additional event loop for this port */
+	//insmod("tcp_pipe pipe.tcp.port_" + port);
 })(8080);
 
 // Now setup the HTTPS support
