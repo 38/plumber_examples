@@ -18,19 +18,28 @@ if (plumber.std == undefined) insmod("pssm");
 // Communication method we need to use
 if (pipe.mem == undefined) insmod("mem_pipe");
 
+// Set the servlet search path, so that the framework will be able to find our servlet 
+runtime.servlet.path = "./bin:" + runtime.servlet.path;       // the servlet search path
+
+// Change the scheduler cofingurations
+scheduler.worker.default_itc_pipe = "pipe.mem";
+scheduler.worker.nthreads = 8;
+scheduler.async.nthreads = 1;
+
 // Setup our TCP module to accept HTTP requests from 8080 port
-(function _configure_tcp(port) 
+(function _configure_tcp(port, nthreads)
 {
+	if (nthreads == 0) return undefined;
 	var path = "pipe.tcp.port_" + port;
-	if($global[path] == undefined) 
-		insmod("tcp_pipe " + port);
+	if($global[path] == undefined) insmod("tcp_pipe " + port);
 	$global[path + ".size"] = 65536;
 	$global[path + ".ttl"] = 240;
 	$global[path + ".reuseaddr"] = 1;
 	/* If there are too many connections, it's possible that the event loop become the bottleneck.
 	 * In this case we could add an additional event loop for this port */
-	//insmod("tcp_pipe pipe.tcp.port_" + port);
-})(8080);
+	for(var i = 1; i < nthreads; i ++)
+		insmod("tcp_pipe " + path);
+})(8080, (scheduler.worker.nthreads + 7) / 8);
 
 // Now setup the HTTPS support
 if(module.binary.has_tls_pipe == 1)
@@ -71,11 +80,3 @@ if(module.binary.has_tls_pipe == 1)
 	})(4343);
 }
 else print("TLS module is not avaiable in current system, TLS support disabled");
-
-// Set the servlet search path, so that the framework will be able to find our servlet 
-runtime.servlet.path = "./bin:" + runtime.servlet.path;       // the servlet search path
-
-// Change the scheduler cofingurations
-scheduler.worker.default_itc_pipe = "pipe.mem";
-scheduler.worker.nthreads = 8;
-scheduler.async.nthreads = 1;
