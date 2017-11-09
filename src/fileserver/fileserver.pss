@@ -6,6 +6,7 @@
 
 // Load the configuration
 import("service");
+import("daemon");
 import("config.pss");
 
 //define the file server
@@ -37,8 +38,21 @@ fileserver = {
 		FileReader    "__error__" -> "500";
 	} ResponseGenerator;
 };
+
+runtime.daemon.id = "plumber-file-server";
+runtime.daemon.admin_group = "docker";
+
 /* (Optional) dump the visualization graph */
 Service.visualize(fileserver);
 
-/* start the file server */
-Service.start(fileserver);
+
+if(Daemon.ping(runtime.daemon.id))
+{
+	print("/* Updating existing daemon */");
+	Daemon.reload(runtime.daemon.id, fileserver);
+}
+else
+{
+	print("/* Starting new daemon */");
+	Service.start(fileserver);
+}
