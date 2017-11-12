@@ -263,6 +263,8 @@ EOF
 
 chmod +x ${INSTALLDIR}/bin/whereami
 
+mkdir -p ${INSTALLDIR}/var/run/plumber
+
 LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
 
 LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1
