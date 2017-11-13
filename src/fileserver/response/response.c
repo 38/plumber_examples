@@ -134,7 +134,7 @@ int _exec(void* d)
 	{
 		static const char response[] = "<html><title>Ooops</title><body>Ooops, We can not find the page you request.</body></html>";
 		pstd_bio_printf(out, "HTTP/1.1 404 Not Found\r\n");
-		pstd_bio_printf(out, "Content-Type: %s\r\n", _read_str(inst, ctx->mime_acc));
+		pstd_bio_printf(out, "Content-Type: text/html\r\n");
 		pstd_bio_printf(out, "Content-Length: %zu\r\n", sizeof(response) - 1);
 		_connection_field(out, ctx->output);
 		pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n", runtime_version());
