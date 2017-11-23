@@ -5,25 +5,26 @@ SOURCEDIR=`pwd`/dependencies
 
 function print_help() {
 	echo "Initialize the Plumber Isolated Environment"
-	echo "--real[=<prefix>]       Use the real environment, if prefix is missing use Plumber at /"
-	echo "--javascript=[<prefix>] Enable Javascript servlet support"
-	echo "--test                  Run test cases before we start the environment"
-	echo "--recompile             Recompile the code"
-	echo "--reconfigure           Reconfigure the Plumber source code"
-	echo "--reinstall[=<prefix>]  Reinstall the Plumber environment, if prefix specified, use the given prefix"
-	echo "--remove                Remove all the generated file"
-	echo "--commit=<tag>          Use the given version number of Plumber"
-	echo "--sync                  Sync the Plumber code"
-	echo "--shell=<shell-command> Instead of using zsh, use the given shell"
-	echo "--cc=<C-compiler>       Use the given C compiler rather than GCC"
-	echo "--cxx=<C++-compiler>    Use the given C++ compiler rather than G++"
-	echo "--cflags=<flags>        Append C Compiler Flags"
-	echo "--cxxflags=<flags>      Append C++ Compiler Flags"
-	echo "--ldflags=<flags>       Append Linker Flags"
-	echo "--log=<log-level>       Use the given log level for Plumber logging system"
-	echo "--optimization=<level>  Set the level of optimization (from 0 to 4)"
-	echo "--gproftools            Compile code with Google profiling tools"
-	echo "--help                  Show this help message"
+	echo "--real[=<prefix>]                 Use the real environment, if prefix is missing use Plumber at /"
+	echo "--javascript-prebuild[=<tarball>] Enable Javascript servlet support with the prebuild tarball"
+	echo "--javascript[=<prefix>]           Enable Javascript servlet support"
+	echo "--test                            Run test cases before we start the environment"
+	echo "--recompile                       Recompile the code"
+	echo "--reconfigure                     Reconfigure the Plumber source code"
+	echo "--reinstall[=<prefix>]            Reinstall the Plumber environment, if prefix specified, use the given prefix"
+	echo "--remove                          Remove all the generated file"
+	echo "--commit=<tag>                    Use the given version number of Plumber"
+	echo "--sync                            Sync the Plumber code"
+	echo "--shell=<shell-command>           Instead of using zsh, use the given shell"
+	echo "--cc=<C-compiler>                 Use the given C compiler rather than GCC"
+	echo "--cxx=<C++-compiler>              Use the given C++ compiler rather than G++"
+	echo "--cflags=<flags>                  Append C Compiler Flags"
+	echo "--cxxflags=<flags>                Append C++ Compiler Flags"
+	echo "--ldflags=<flags>                 Append Linker Flags"
+	echo "--log=<log-level>                 Use the given log level for Plumber logging system"
+	echo "--optimization=<level>            Set the level of optimization (from 0 to 4)"
+	echo "--gproftools                      Compile code with Google profiling tools"
+	echo "--help                            Show this help message"
 }
 
 function argv() {
@@ -72,6 +73,15 @@ function parse_options() {
 				realenv="/";;;
 			--real=* )
 				realenv="$(argv ${arg})";;;
+			--javascript-prebuilt )
+				javascript="yes"
+				js_prebuilt="http://plumberserver.com/data/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
+				need reconfigure;;;
+			--javascript-prebuild )
+				javascript="yes"
+				js_prebuilt="$(argv --string ${arg})"
+				need reconfigure
+				;;;
 			--javascript ) 
 				javascript="yes"
 				need reconfigure;;;
@@ -177,8 +187,13 @@ fi
 
 if [ "x${javascript}" = "xyes" ]
 then
-	mkdir -p ${BUILDDIR}/plumberv8
-	${SOURCEDIR}/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
+	if "x${js_prebuilt}" = "x" ]
+	then
+		mkdir -p ${BUILDDIR}/plumberv8
+		${SOURCEDIR}/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
+	else
+		${SOURCEDIR}/plumberv8/buildv8 --install-only=${js_prebuilt} --prefix=${INSTALLDIR} || exit 1
+	fi
 	JS_PARAM=(-DPLUMBER_V8_PREFIX=${INSTALLDIR} -Dbuild_language_javascript=yes)
 fi
 
