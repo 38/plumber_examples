@@ -187,7 +187,7 @@ fi
 
 if [ "x${javascript}" = "xyes" ]
 then
-	if "x${js_prebuilt}" = "x" ]
+	if [ "x${js_prebuilt}" = "x" ]
 	then
 		mkdir -p ${BUILDDIR}/plumberv8
 		${SOURCEDIR}/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
