@@ -7,7 +7,34 @@
 // Load the configuration
 import("service");
 import("daemon");
+import("options");
+
 import("config.pss");
+
+
+var template = Options.empty_template();
+Options.add_option(template, "--foreground", "-F", "Start the file server in foreground", 0, 0);
+Options.add_option(template, "--help", "-h", "Print this help message", 0, 0);
+var result = Options.parse(template, argv);
+
+var print_help = function() 
+{
+	print("The Simple Plumber Static Content Server");
+	print("Usage: ", result["program"], " [arguments]");
+	print("Arguments:");
+	Options.print_help(template);
+}
+
+if(len(result["unparsed"]) > 0)
+{
+	print_help();
+	exit(1);
+}
+if(result["parsed"]["--help"] != undefined)
+{
+	print_help();
+	exit(0);
+}
 
 //define the file server
 fileserver = {
@@ -39,14 +66,16 @@ fileserver = {
 	} ResponseGenerator;
 };
 
-runtime.daemon.id = "plumber-file-server";
-runtime.daemon.admin_group = "docker";
+if(result["parsed"]["--foreground"] == undefined)
+{
+	runtime.daemon.id = "plumber-file-server";
+	runtime.daemon.admin_group = "docker";
+}
 
 /* (Optional) dump the visualization graph */
 Service.visualize(fileserver);
 
-
-if(Daemon.ping(runtime.daemon.id))
+if(result["parsed"]["--foreground"] == undefined && Daemon.ping(runtime.daemon.id))
 {
 	print("/* Updating existing daemon */");
 	Daemon.reload(runtime.daemon.id, fileserver);
