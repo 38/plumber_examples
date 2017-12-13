@@ -15,22 +15,22 @@ import("config.pss");
 var template = Options.empty_template();
 Options.add_option(template, "--foreground", "-F", "Start the file server in foreground", 0, 0);
 Options.add_option(template, "--help", "-h", "Print this help message", 0, 0);
-var result = Options.parse(template, argv);
+var options = Options.parse(template, argv);
 
 var print_help = function() 
 {
 	print("The Simple Plumber Static Content Server");
-	print("Usage: ", result["program"], " [arguments]");
+	print("Usage: ", options["program"], " [arguments]");
 	print("Arguments:");
 	Options.print_help(template);
 }
 
-if(len(result["unparsed"]) > 0)
+if(len(options["unparsed"]) > 0)
 {
 	print_help();
 	exit(1);
 }
-if(result["parsed"]["--help"] != undefined)
+if(options["parsed"]["--help"] != undefined)
 {
 	print_help();
 	exit(0);
