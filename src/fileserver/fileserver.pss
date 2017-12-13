@@ -66,7 +66,7 @@ fileserver = {
 	} ResponseGenerator;
 };
 
-if(result["parsed"]["--foreground"] == undefined)
+if(options["parsed"]["--foreground"] == undefined)
 {
 	runtime.daemon.id = "plumber-file-server";
 	runtime.daemon.admin_group = "docker";
@@ -75,7 +75,7 @@ if(result["parsed"]["--foreground"] == undefined)
 /* (Optional) dump the visualization graph */
 Service.visualize(fileserver);
 
-if(result["parsed"]["--foreground"] == undefined && Daemon.ping(runtime.daemon.id))
+if(options["parsed"]["--foreground"] == undefined && Daemon.ping(runtime.daemon.id))
 {
 	print("/* Updating existing daemon */");
 	Daemon.reload(runtime.daemon.id, fileserver);
