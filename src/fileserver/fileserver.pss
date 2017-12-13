@@ -9,13 +9,17 @@ import("service");
 import("daemon");
 import("options");
 
-import("config.pss");
 
 
 var template = Options.empty_template();
 Options.add_option(template, "--foreground", "-F", "Start the file server in foreground", 0, 0);
 Options.add_option(template, "--help", "-h", "Print this help message", 0, 0);
-var options = Options.parse(template, argv);
+Options.add_option(template, "--tcp-port", "-p", "Set the TCP port", 1, 1);
+Options.add_option(template, "--tls-port", "-P", "Set the TLS port", 1, 1);
+Options.add_option(template, "--threads", "-t", "The number of worker threads", 1, 1);
+options = Options.parse(template, argv);
+
+import("config.pss");
 
 var print_help = function() 
 {

@@ -21,9 +21,21 @@ if (pipe.mem == undefined) insmod("mem_pipe");
 // Set the servlet search path, so that the framework will be able to find our servlet 
 runtime.servlet.path = getcwd() + "/bin:" + runtime.servlet.path;       // the servlet search path
 
+/* Read the configuration from the commandline param */
+var _readopt = function(name, defval) 
+{
+	if(options["parsed"][name] != undefined) 
+		return parse_int(options["parsed"][name][0], defval);
+	return defval;
+}
+
+tcp_port = _readopt("--tcp-port", 8080);
+tls_port = _readopt("--tls-port", 4343);
+nthreads = _readopt("--threads", 8);
+
 // Change the scheduler cofingurations
 scheduler.worker.default_itc_pipe = "pipe.mem";
-scheduler.worker.nthreads = 8;
+scheduler.worker.nthreads = nthreads;
 scheduler.async.nthreads = 1;
 
 // Setup our TCP module to accept HTTP requests from 8080 port
@@ -39,7 +51,7 @@ scheduler.async.nthreads = 1;
 	 * In this case we could add an additional event loop for this port */
 	for(var i = 1; i < nthreads; i ++)
 		insmod("tcp_pipe " + path);
-})(8080, (scheduler.worker.nthreads + 7) / 8);
+})(tcp_port, (scheduler.worker.nthreads + 7) / 8);
 
 // Now setup the HTTPS support
 if(module.binary.has_tls_pipe == 1)
@@ -77,6 +89,6 @@ if(module.binary.has_tls_pipe == 1)
 			//        h) To enable the ALPN protocol negotiation,you should provide a list of protocol strings in preference order
 			$global[tls_path + ".alpn_protos"] = "http/1.1 h2 spdy/3";
 		}
-	})(4343);
+	})(tls_port);
 }
 else print("TLS module is not avaiable in current system, TLS support disabled");
