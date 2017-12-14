@@ -9,8 +9,6 @@ import("service");
 import("daemon");
 import("options");
 
-
-
 var template = Options.empty_template();
 Options.add_option(template, "--foreground", "-F", "Start the file server in foreground", 0, 0);
 Options.add_option(template, "--help", "-h", "Print this help message", 0, 0);
