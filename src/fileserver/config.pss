@@ -24,6 +24,7 @@ runtime.servlet.path = getcwd() + "/bin:" + runtime.servlet.path;       // the s
 /* Read the configuration from the commandline param */
 var _readopt = function(name, defval) 
 {
+    if(options == undefined) return defval;
 	if(options["parsed"][name] != undefined) 
 		return parse_int(options["parsed"][name][0], defval);
 	return defval;
