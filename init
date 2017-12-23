@@ -2,6 +2,7 @@
 BUILDDIR=`pwd`/build
 INSTALLDIR=`pwd`/installed
 SOURCEDIR=`pwd`/dependencies
+NCPUS=`grep 'processor' /proc/cpuinfo  | wc -l`
 
 function print_help() {
 	echo "Initialize the Plumber Isolated Environment"
@@ -77,7 +78,7 @@ function parse_options() {
 				javascript="yes"
 				js_prebuilt="http://plumberserver.com/data/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
 				need reconfigure;;;
-			--javascript-prebuild )
+			--javascript-prebuild=* )
 				javascript="yes"
 				js_prebuilt="$(argv --string ${arg})"
 				need reconfigure
@@ -236,7 +237,7 @@ fi
 if [ "x${recompile}" = "xyes" ]
 then
 	pushd ${BUILDDIR}/plumber
-	make || exit 1
+	make -j ${NCPUS}|| exit 1
 	popd
 fi
 
@@ -250,7 +251,7 @@ fi
 if [ "x${reinstall}" = "xyes" ]
 then
 	pushd ${BUILDDIR}/plumber
-	make install || exit 1
+	make -j ${NCPUS} install || exit 1
 	popd
 	LD_LIBRARY_PATH=${INSTALLDIR}/lib ${INSTALLDIR}/bin/protoman --update --yes prototypes/*.ptype || exit 1
 	LD_LIBRARY_PATH=${INSTALLDIR}/lib sh ${BUILDDIR}/plumber/install-prototype.sh || exit 1
