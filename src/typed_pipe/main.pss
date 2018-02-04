@@ -18,4 +18,8 @@ graph = {
 	} first "out" -> "in" write "out" -> ();
 };
 
+var info = Service.typeinfo(graph);
+for(var key in info)
+	print(key, ":", info[key]);
+
 Service.start(graph);

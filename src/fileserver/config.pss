@@ -37,7 +37,7 @@ nthreads = _readopt("--threads", 8);
 // Change the scheduler cofingurations
 scheduler.worker.default_itc_pipe = "pipe.mem";
 scheduler.worker.nthreads = nthreads;
-scheduler.async.nthreads = 1;
+scheduler.async.nthreads = 8;
 
 // Setup our TCP module to accept HTTP requests from 8080 port
 (function _configure_tcp(port, nthreads)
@@ -48,6 +48,7 @@ scheduler.async.nthreads = 1;
 	$global[path + ".size"] = 65536;
 	$global[path + ".ttl"] = 240;
 	$global[path + ".reuseaddr"] = 1;
+	$global[path + ".backlog"] = 65536;
 	/* If there are too many connections, it's possible that the event loop become the bottleneck.
 	 * In this case we could add an additional event loop for this port */
 	for(var i = 1; i < nthreads; i ++)
@@ -93,3 +94,6 @@ if(module.binary.has_tls_pipe == 1)
 	})(tls_port);
 }
 else print("TLS module is not avaiable in current system, TLS support disabled");
+
+// This gives us a little bit more performance benefit probably because the server is not computation invensive
+scheduler.worker.round_robin_move_threshold = 5;

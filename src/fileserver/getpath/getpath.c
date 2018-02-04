@@ -95,7 +95,8 @@ static inline int _state_free(_state_t* state)
 int _exec(void* data)
 {
 	servlet_data_t* sd = (servlet_data_t*)data;
-	char buffer[4096];
+	char _buffer[4096];
+	char* buffer = NULL;
 	_state_t* state;
 	size_t rem = 0, sz = 0;
 	
@@ -112,7 +113,21 @@ int _exec(void* data)
 	}
 	for(;state->ps != ERR && state->ps != OK;)
 	{
-		sz = pipe_read(sd->request, buffer, sizeof(buffer));
+		/* Before we actually started, we need to release the previously acquired internal buffer */
+		size_t min_sz;
+		if(buffer != _buffer && buffer != NULL && ERROR_CODE(int) == pipe_data_release_buf(sd->request, buffer, sz))
+			goto READ_ERR;
+
+		sz = sizeof(_buffer);
+		int rc = pipe_data_get_buf(sd->request, sizeof(_buffer), (void const**)&buffer, &min_sz, &sz);
+		if(ERROR_CODE(int) == rc) goto READ_ERR;
+
+		if(rc == 0) 
+		{
+			buffer = _buffer;
+			sz = pipe_read(sd->request, buffer, sizeof(buffer));
+		}
+		
 		if(sz == 0)
 		{
 			if(pipe_eof(sd->request) > 0)
@@ -135,6 +150,7 @@ int _exec(void* data)
 		}
 		else if(sz == ERROR_CODE(size_t))
 		{
+READ_ERR:
 			if(new_state) _state_free(state);
 			return 0;
 		}
@@ -209,15 +225,20 @@ int _exec(void* data)
 			}
 
 		}
-		if(state->ps == OK && rem + 1 < sz)
-		    pipe_cntl(sd->request, PIPE_CNTL_EOM, buffer, rem);
+		if(state->ps == OK)
+		{
+		    if(_buffer == buffer && rem + 1 < sz) 
+				pipe_cntl(sd->request, PIPE_CNTL_EOM, buffer, rem);
+			
+			if(_buffer != buffer)
+				pipe_data_release_buf(sd->request, buffer, rem);
+		}
 		if(state->ps == ERR)
 		    state->keep_alive = 0;
 	}
 
 	if(state->keep_alive == 1)
 	    pipe_cntl(sd->request, PIPE_CNTL_SET_FLAG, PIPE_PERSIST);
-
 
 	char itbuf[pstd_type_instance_size(sd->type_model)];
 	pstd_type_instance_t* inst = pstd_type_instance_new(sd->type_model, itbuf);
