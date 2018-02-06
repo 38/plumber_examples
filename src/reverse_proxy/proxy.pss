@@ -10,10 +10,15 @@ scheduler.async.nthreads = 4;
 
 runtime.servlet.path = getcwd() + "/bin:" + runtime.servlet.path;
 
-Service.start({
+proxy_service = {
 	req := "request http://plumberserver.com/",
 	client := "network/http/client -H -T 8 -P 512";
 	res := "response";
 	() -> "raw" req "parsed" -> "request" client "response" -> "response" res "output" -> ();
 	client "__error__" -> "500" res;
-});
+};
+
+if(import_level() == 0) 
+{
+	Service.start(proxy_service);
+}

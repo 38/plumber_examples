@@ -15,6 +15,7 @@ Options.add_option(template, "--help", "-h", "Print this help message", 0, 0);
 Options.add_option(template, "--tcp-port", "-p", "Set the TCP port", 1, 1);
 Options.add_option(template, "--tls-port", "-P", "Set the TLS port", 1, 1);
 Options.add_option(template, "--threads", "-t", "The number of worker threads", 1, 1);
+Options.add_option(template, "--show-graph", "-S", "Show the service graph and exit", 0, 0);
 options = Options.parse(template, argv);
 
 import("config.pss");
@@ -32,6 +33,7 @@ if(len(options["unparsed"]) > 0)
 	print_help();
 	exit(1);
 }
+
 if(options["parsed"]["--help"] != undefined)
 {
 	print_help();
@@ -74,16 +76,19 @@ if(options["parsed"]["--foreground"] == undefined)
 	runtime.daemon.admin_group = "docker";
 }
 
-/* (Optional) dump the visualization graph */
-Service.visualize(fileserver);
+if(options["parsed"]["--show-graph"] != undefined)
+{
+	Service.visualize(fileserver);
+	exit(0);
+}
 
 if(options["parsed"]["--foreground"] == undefined && Daemon.ping(runtime.daemon.id))
 {
-	print("/* Updating existing daemon */");
+	print("Updating existing daemon");
 	Daemon.reload(runtime.daemon.id, fileserver);
 }
 else
 {
-	print("/* Starting new daemon */");
+	print("Starting new daemon");
 	Service.start(fileserver);
 }
