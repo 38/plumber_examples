@@ -17,36 +17,32 @@ typedef struct {
 	pipe_t    bad_request;
 	pipe_t    internal_err;
 	pstd_type_model_t*    type_model;
+	pstd_type_accessor_t  token_acc;
+#if 0
 	pstd_type_accessor_t  status_acc;
 	pstd_type_accessor_t  body_acc;
 	pstd_type_accessor_t  header_acc;
+#endif
 } context_t;
 
 int init(uint32_t argc, char const* const* argv, void* ctxbuf)
 {
 	context_t* ctx = (context_t*)ctxbuf;
 
-	ctx->response = pipe_define("response", PIPE_INPUT, "plumber/std_servlet/network/http/client/v0/Response");
+	ctx->response = pipe_define("response", PIPE_INPUT, "plumber/std_servlet/network/http/proxy/v0/Response");
 	ctx->output = pipe_define("output", PIPE_OUTPUT | PIPE_ASYNC, NULL);
 	ctx->internal_err = pipe_define("500", PIPE_INPUT, NULL);
 	ctx->bad_request = pipe_define("400", PIPE_INPUT, NULL);
 
 	ctx->type_model = pstd_type_model_new();
+#if 0
 	ctx->status_acc = pstd_type_model_get_accessor(ctx->type_model, ctx->response, "status");
 	ctx->body_acc   = pstd_type_model_get_accessor(ctx->type_model, ctx->response, "body.token");
 	ctx->header_acc = pstd_type_model_get_accessor(ctx->type_model, ctx->response, "header.token");
+#endif
+	ctx->token_acc = pstd_type_model_get_accessor(ctx->type_model, ctx->response, "token");
 
 	return 0;
-}
-
-static inline void _connection_field(pstd_bio_t* out, pipe_t res)
-{
-	pipe_flags_t flags;
-	pipe_cntl(res, PIPE_CNTL_GET_FLAGS, &flags);
-	if(flags & PIPE_PERSIST)
-	    pstd_bio_printf(out, "Connection: keep-alive\r\n");
-	else
-	    pstd_bio_printf(out, "Connection: close\r\n");
 }
 
 static inline int _write_token(pstd_bio_t* bio, pstd_type_instance_t* inst, pstd_type_accessor_t acc)
@@ -88,8 +84,8 @@ int _exec(void* d)
 		goto RET;
 	}
 
-	_write_token(out, inst, ctx->header_acc);
-	_write_token(out, inst, ctx->body_acc);
+	_write_token(out, inst, ctx->token_acc);
+
 
 RET:
 	pstd_bio_free(out);

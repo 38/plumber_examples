@@ -90,6 +90,7 @@ static int _async_exec(async_handle_t* handle, void* buf)
 			async_cntl(handle, ASYNC_CNTL_NOTIFY_WAIT, ERROR_CODE(int));
 			ERROR_RETURN_LOG_ERRNO(int, "Cannot start the actual wait thread");
 		}
+		usleep(1000000*2);
 	}
 	return 0;
 }

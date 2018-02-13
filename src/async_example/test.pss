@@ -6,7 +6,7 @@ insmod("pssm");
 insmod("mem_pipe");
 insmod("tcp_pipe 1234");
 runtime.servlet.path=runtime.servlet.path + ":./bin"
-scheduler.async.nthreads = 5;
+scheduler.async.nthreads = 1;
 type = argv[1];
 
 if(type != "async" && type != "sync" && type != "async_wait")

@@ -30,7 +30,7 @@ int init(uint32_t argc, char const* const* argv, void* data)
 
 	servlet_data_t* sd = (servlet_data_t*)data;
 	sd->raw    = pipe_define("raw", PIPE_INPUT, NULL);
-	sd->parsed = pipe_define("parsed", PIPE_OUTPUT, "plumber/std_servlet/network/http/client/v0/Request");
+	sd->parsed = pipe_define("parsed", PIPE_OUTPUT, "plumber/std_servlet/network/http/proxy/v0/Request");
 	sd->error  = pipe_define("error", PIPE_OUTPUT, NULL);
 	
 	sd->type_model = pstd_type_model_new();
