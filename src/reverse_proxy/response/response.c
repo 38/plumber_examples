@@ -84,7 +84,15 @@ int _exec(void* d)
 		goto RET;
 	}
 
-	_write_token(out, inst, ctx->token_acc);
+	if(ERROR_CODE(int) == _write_token(out, inst, ctx->token_acc))
+	{
+		static const char response[] = "<html><title>Service Unavailable</title><body><h1>503 Service Unavailable</h1><br/></body></html>";
+		pstd_bio_printf(out, "HTTP/1.1 503 Unavailable\n");
+		pstd_bio_printf(out, "Content-Type: text/html\r\n");
+	    pstd_bio_printf(out, "Connection: close\r\n");
+		pstd_bio_printf(out, "Content-Length: %zu\r\n\r\n", sizeof(response) - 1);
+		pstd_bio_printf(out, "%s", response);
+	}
 
 
 RET:

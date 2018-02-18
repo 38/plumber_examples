@@ -1,18 +1,20 @@
 #!/usr/bin/env pscript
 insmod("pssm");
 insmod("mem_pipe");
-insmod("tcp_pipe 8082");
+insmod("tcp_pipe 8081");
+insmod("tcp_pipe --slave 10443");
+insmod("tls_pipe cert=../fileserver/environment/certs/cert.pem key=../fileserver/environment/certs/key.pem pipe.tcp.port_10443");
 
 import("service");
 
-scheduler.worker.nthreads = 4;
-scheduler.async.nthreads = 4;
+scheduler.worker.nthreads = 1;
+scheduler.async.nthreads = 1;
 
 runtime.servlet.path = getcwd() + "/bin:" + runtime.servlet.path;
 
 proxy_service = {
-	req := "request http://www.cs.utah.edu";
-	proxy := "network/http/proxy -P 32 -p 1024 -T 30";
+	req := "request http://www.utah.edu";
+	proxy := "network/http/proxy -P 1024 -p 1024 -T 30";
 	res := "response";
 	() -> "raw" req "parsed" -> "request" proxy "response" -> "response" res "output" -> ();
 	proxy "__error__" -> "500" res;
