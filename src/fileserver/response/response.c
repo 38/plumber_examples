@@ -13,6 +13,7 @@
 
 typedef struct {
 	pipe_t    file;
+	pipe_t    proxy;
 	pipe_t    mime;
 	pipe_t    output;
 	pipe_t    bad_request;
@@ -23,6 +24,7 @@ typedef struct {
 	pstd_type_accessor_t  file_acc;
 	pstd_type_accessor_t  redir_acc;
 	pstd_type_accessor_t  mime_acc;
+	pstd_type_accessor_t  proxy_acc;
 } context_t;
 
 int init(uint32_t argc, char const* const* argv, void* ctxbuf)
@@ -30,6 +32,7 @@ int init(uint32_t argc, char const* const* argv, void* ctxbuf)
 	context_t* ctx = (context_t*)ctxbuf;
 
 	ctx->file   = pipe_define("file", PIPE_INPUT, "plumber/std_servlet/filesystem/readfile/v0/Result");
+	ctx->proxy  = pipe_define("proxy", PIPE_INPUT, "plumber/std_servlet/network/http/proxy/v0/Response");
 	ctx->mime   = pipe_define("mime", PIPE_INPUT, "plumber/std/request_local/String");
 	ctx->output = pipe_define("output", PIPE_OUTPUT | PIPE_ASYNC, NULL);
 	ctx->interal_err = pipe_define("500", PIPE_INPUT, NULL);
@@ -41,6 +44,7 @@ int init(uint32_t argc, char const* const* argv, void* ctxbuf)
 	ctx->file_acc   = pstd_type_model_get_accessor(ctx->type_model, ctx->file, "file.token");
 	ctx->redir_acc  = pstd_type_model_get_accessor(ctx->type_model, ctx->file, "redirect.token");
 	ctx->mime_acc   = pstd_type_model_get_accessor(ctx->type_model, ctx->mime, "token");
+	ctx->proxy_acc  = pstd_type_model_get_accessor(ctx->type_model, ctx->proxy, "token");
 
 	return 0;
 }
@@ -107,38 +111,55 @@ int _exec(void* d)
 		goto RET;
 	}
 
-	uint32_t status = PSTD_TYPE_INST_READ_PRIMITIVE(uint32_t, inst, ctx->status_acc);
-	if(status == 200)
+	if(pipe_eof(ctx->file) == 0)
 	{
-		scope_token_t scope = PSTD_TYPE_INST_READ_PRIMITIVE(scope_token_t, inst, ctx->file_acc);
-		const pstd_file_t* file = pstd_file_from_rls(scope);
+		uint32_t status = PSTD_TYPE_INST_READ_PRIMITIVE(uint32_t, inst, ctx->status_acc);
+		if(status == 200)
+		{
+			scope_token_t scope = PSTD_TYPE_INST_READ_PRIMITIVE(scope_token_t, inst, ctx->file_acc);
+			const pstd_file_t* file = pstd_file_from_rls(scope);
 
-		pstd_bio_printf(out, "HTTP/1.1 200 OK\r\n");
-		pstd_bio_printf(out, "Content-Type: %s\r\n", _read_str(inst, ctx->mime_acc));
-		pstd_bio_printf(out, "Content-Length: %zu\r\n", pstd_file_size(file));
-		_connection_field(out, ctx->output);
-		pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n", runtime_version());
-		pstd_bio_write_scope_token(out, scope);
+			pstd_bio_printf(out, "HTTP/1.1 200 OK\r\n");
+			pstd_bio_printf(out, "Content-Type: %s\r\n", _read_str(inst, ctx->mime_acc));
+			pstd_bio_printf(out, "Content-Length: %zu\r\n", pstd_file_size(file));
+			_connection_field(out, ctx->output);
+			pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n", runtime_version());
+			pstd_bio_write_scope_token(out, scope);
+		}
+		else if(status == 302)
+		{
+			static const char response[] = "<html><title>Page Moved</title><body>The page has been moved.</body></html>";
+			pstd_bio_printf(out, "HTTP/1.1 302 Move Permenantly\r\n");
+			pstd_bio_printf(out, "Content-Type: text/plain\r\n");
+			pstd_bio_printf(out, "Content-Length: %zu\r\n", sizeof(response) - 1);
+			pstd_bio_printf(out, "Location: %s\r\n", _read_str(inst, ctx->redir_acc));
+			_connection_field(out, ctx->output);
+			pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n%s", runtime_version(),response);
+		}
+		else if(status == 404)
+		{
+			static const char response[] = "<html><title>Ooops</title><body>Ooops, We can not find the page you request.</body></html>";
+			pstd_bio_printf(out, "HTTP/1.1 404 Not Found\r\n");
+			pstd_bio_printf(out, "Content-Type: text/html\r\n");
+			pstd_bio_printf(out, "Content-Length: %zu\r\n", sizeof(response) - 1);
+			_connection_field(out, ctx->output);
+			pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n", runtime_version());
+			pstd_bio_printf(out, "%s", response);
+		}
 	}
-	else if(status == 302)
+	else
 	{
-		static const char response[] = "<html><title>Page Moved</title><body>The page has been moved.</body></html>";
-		pstd_bio_printf(out, "HTTP/1.1 302 Move Permenantly\r\n");
-		pstd_bio_printf(out, "Content-Type: text/plain\r\n");
-		pstd_bio_printf(out, "Content-Length: %zu\r\n", sizeof(response) - 1);
-		pstd_bio_printf(out, "Location: %s\r\n", _read_str(inst, ctx->redir_acc));
-		_connection_field(out, ctx->output);
-		pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n%s", runtime_version(),response);
-	}
-	else if(status == 404)
-	{
-		static const char response[] = "<html><title>Ooops</title><body>Ooops, We can not find the page you request.</body></html>";
-		pstd_bio_printf(out, "HTTP/1.1 404 Not Found\r\n");
-		pstd_bio_printf(out, "Content-Type: text/html\r\n");
-		pstd_bio_printf(out, "Content-Length: %zu\r\n", sizeof(response) - 1);
-		_connection_field(out, ctx->output);
-		pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n", runtime_version());
-		pstd_bio_printf(out, "%s", response);
+		scope_token_t scope = PSTD_TYPE_INST_READ_PRIMITIVE(scope_token_t, inst, ctx->proxy_acc);
+		if(ERROR_CODE(int) == pstd_bio_write_scope_token(out, scope))
+		{
+			static const char response[] = "<html><title>Oops</title><body>Oops, We cannot reach the service you are requesting.</body></html>";
+			pstd_bio_printf(out, "HTTP/1.1 503 Service Unavailable\r\n");
+			pstd_bio_printf(out, "Content-Type: text/html\r\n");
+			pstd_bio_printf(out, "Content-Length: %zu\r\n", sizeof(response) - 1);
+			_connection_field(out, ctx->output);
+			pstd_bio_printf(out, "Server: StaticFileServer/Plumber(%s)\r\n\r\n", runtime_version());
+			pstd_bio_printf(out, "%s", response);
+		}
 	}
 
 RET:
