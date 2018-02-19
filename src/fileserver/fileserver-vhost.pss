@@ -27,43 +27,92 @@ var get_reader = function(site_list)
 
 	var reader = {
 		selector    := selector_init_arg; 
-		merger      := "dataflow/firstnonempty " + num_sites;
-		error       := "dataflow/firstnonempty " + (2 + num_sites);
+
 		{
 			(path) -> "data";
 			(host) -> "cond";
 		} selector;
 
-		merger "out" -> (out);
-
 		{
 			selector "__error__" -> "in0";
-			merger   "__error__" -> "in1";
 		} error "out" -> (__error__);
 	};
 	
 	var id = 0;
 	var outid = 0;
+	var fid = 0;
+	var pid = 0;
 	for(var site in site_list)
 	{
-		var name = "readfile_" + id;
+		var name = "site_" + id;
 		var selector_port = "out" + outid;
 
 		if(site == "__default__") selector_port = "default";
 		else outid ++;
-
-		Service.add_node(reader, name, "filesystem/readfile " + site_list[site]);
+		
 		Service.add_pipe(reader, "selector", selector_port, "path", name);
-		Service.add_pipe(reader, name, "result", "in" + id, "merger");
-		Service.add_pipe(reader, name, "__error__", "in" + (2 + id), "error");
+		Service.add_pipe(reader, name, "__error__", "in" + (1 + id), "error");
+
+		if(typeof(site_list[site]) == "string")
+		{
+			/* If this site is just a file server, add the file accessor */
+			Service.add_node(reader, name, "filesystem/readfile " + site_list[site]);
+			Service.add_pipe(reader, name, "result", "in" + fid, "file_merger");
+			fid ++;
+		}
+		else if(typeof(site_list[site]) == "dict")
+		{
+			/* If this site is defined by a subgraph, we need to handle this */
+			Service.add_node(reader, name, site_list[site]);
+
+			/* If it produces the file output, export it */
+			if(site_list[site]["@output@file"] != undefined)
+			{
+				Service.add_pipe(reader, name, "file", "in" + fid, "file_merger");
+				fid ++;
+			}
+
+			/* If it produces the proxy output */
+			if(site_list[site]["@output@proxy"] != undefined)
+			{
+				Service.add_pipe(reader, name, "proxy", "in" + pid, "proxy_merger");
+				pid ++;
+			}
+		}
+
 		id++;
 	}
+
+	var error_count = 1 + num_sites;
+
+	/* If we do have one or more file output */
+	if(fid > 0)
+	{
+		Service.add_node(reader, "file_merger", "dataflow/firstnonempty " + fid);
+		Service.add_out_port(reader, "file", "file_merger", "out");
+		Service.add_pipe(reader, "file_merger", "__error__", "in" + (error_count), "error");
+		error_count ++;
+	}
+	else Service.add_out_port(reader, "file", "__dummy__", "__dummy__");
+
+	/* If we do have one or more reverse proxy output */
+	if(pid > 0)
+	{
+		Service.add_node(reader, "proxy_merger", "dataflow/firstnonempty " + pid);
+		Service.add_out_port(reader, "proxy", "proxy_merger", "out");
+		Service.add_pipe(reader, "proxy_merger", "__error__", "in" + (error_count), "error");
+		error_count ++;
+	}
+	else Service.add_out_port(reader, "proxy", "__dummy__", "__dummy__");
+
+	Service.add_node(reader, "error", "dataflow/firstnonempty " + error_count);
 
 	return reader;
 }
 
 var create_service = function(site_list)
 {
+	print(get_reader(site_list));
 	var fileserver = {
 		parsereq    := "getpath";
 		parsepath   := "filesystem/parsepath --ext-name";
@@ -83,7 +132,10 @@ var create_service = function(site_list)
 			"host" -> "host" reader;
 		};
 		
-		reader "out" -> "file" genres "output" -> ();
+		reader {
+			"file" -> "file";
+			"proxy" -> "proxy";
+		} genres "output" -> ();
 
 		/* Handle the internal error */
 		{
@@ -105,7 +157,13 @@ var create_service = function(site_list)
 
 server = create_service({
 	"localhost:8080": server_base_dir,
-	__default__     : server_base_dir_2
+	"__default__"   : {
+		req   := "proxyreq http://www.utah.edu";
+		proxy := "network/http/proxy -P 1024 -p 1024 -T 30";
+		(path) -> "path" req "request" -> "request" proxy "response" -> (proxy);
+		proxy "__error__" -> (__error__);
+	}//,
+	//__default__     : server_base_dir_2
 });
 
 /* dump the visualization graph */
