@@ -13,6 +13,8 @@
 typedef struct {
 	pipe_t               path;        /*!< The path to request */
 	pipe_t               request;     /*!< The request data structure used by proxy servlet */
+	pipe_t               filepath;    /*!< Enabled when we shouldn't handle this */
+	char*                prefix;      /*!< The prefix we  want to strip */ 
 	char*                base;        /*!< The URL base */
 	pstd_type_model_t*   type_model;  /*!< The type model of this servlet */
 	pstd_type_accessor_t path_acc;    /*!< The path accessor */
@@ -32,7 +34,13 @@ static int _init(uint32_t argc, char const* const* argv, void* ctxmem)
 
 	ctx->path = pipe_define("path", PIPE_INPUT, "plumber/std/request_local/String");
 	ctx->request = pipe_define("request", PIPE_OUTPUT, "plumber/std_servlet/network/http/proxy/v0/Request");
-	ctx->base = strdup(argv[1]);
+	ctx->filepath = pipe_define("filepath", PIPE_MAKE_SHADOW(ctx->path) | PIPE_DISABLED, "plumber/std/request_local/String");
+
+	if(argc == 2)
+		ctx->base = strdup(argv[1]), ctx->prefix = strdup("");
+	else
+		ctx->base = strdup(argv[2]), ctx->prefix = strdup(argv[1]);
+
 	ctx->type_model = pstd_type_model_new();
 	ctx->path_acc = pstd_type_model_get_accessor(ctx->type_model, ctx->path, "token");
 	ctx->url_acc  = pstd_type_model_get_accessor(ctx->type_model, ctx->request, "url.token");
@@ -48,6 +56,7 @@ static int _unload(void* ctxmem)
 	ctx_t* ctx = (ctx_t*)ctxmem;
 	if(NULL != ctx->base) free(ctx->base);
 	if(NULL != ctx->type_model) pstd_type_model_free(ctx->type_model);
+	if(NULL != ctx->prefix) free(ctx->prefix);
 
 	return 0;
 }
@@ -69,11 +78,19 @@ static int _exec(void* ctxmem)
 
 	const char* path = _read_string(inst, ctx->path_acc);
 
-	pstd_string_t* url_obj = pstd_string_new(32);
-	pstd_string_printf(url_obj, "%s%s", ctx->base, path);
-	scope_token_t token = pstd_string_commit(url_obj);
-	PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, ctx->url_acc, token);
-	PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, ctx->method_acc, ctx->GET_METHOD);
+	char const * p = path;
+	char const * q = ctx->prefix;
+	for(;*q && *p == *q; p ++, q ++);
+	if(*q == 0)
+	{
+		pstd_string_t* url_obj = pstd_string_new(32);
+		pstd_string_printf(url_obj, "%s%s", ctx->base, p);
+		scope_token_t token = pstd_string_commit(url_obj);
+		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, ctx->url_acc, token);
+		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, ctx->method_acc, ctx->GET_METHOD);
+	}
+	else
+		pipe_cntl(ctx->filepath, PIPE_CNTL_CLR_FLAG, PIPE_DISABLED);
 
 	pstd_type_instance_free(inst);
 

@@ -158,9 +158,13 @@ var create_service = function(site_list)
 server = create_service({
 	"localhost:8080": server_base_dir,
 	"__default__"   : {
-		req   := "proxyreq http://www.utah.edu";
+		req   := "proxyreq /proxy http://localhost:8080/";
 		proxy := "network/http/proxy -P 1024 -p 1024 -T 30";
-		(path) -> "path" req "request" -> "request" proxy "response" -> (proxy);
+		read  := "filesystem/readfile " + server_base_dir;
+		(path) -> "path" req {
+			"request" -> "request" proxy "response" -> (proxy);
+			"filepath" -> "path" read "result" -> (file);
+		};
 		proxy "__error__" -> (__error__);
 	}//,
 	//__default__     : server_base_dir_2
