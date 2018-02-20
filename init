@@ -59,7 +59,7 @@ function need() {
 
 CC=gcc
 CXX=g++
-LOG=6
+LOG=3
 shell=zsh
 
 [ ! -e ${BUILDDIR}/plumber/Makefile ] && need reconfigure
