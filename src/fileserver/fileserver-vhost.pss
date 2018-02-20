@@ -158,7 +158,7 @@ var create_service = function(site_list)
 server = create_service({
 	"localhost:8080": server_base_dir,
 	"__default__"   : {
-		req   := "proxyreq /proxy http://localhost:8080/";
+		req   := "proxyreq /jenkins http://plumberserver.com:8123/jenkins";
 		proxy := "network/http/proxy -P 1024 -p 1024 -T 30";
 		read  := "filesystem/readfile " + server_base_dir;
 		(path) -> "path" req {
