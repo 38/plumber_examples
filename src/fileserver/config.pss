@@ -30,6 +30,8 @@ var _readopt = function(name, defval)
 	return defval;
 }
 
+read_opt = _readopt;
+
 tcp_port = _readopt("--tcp-port", 8080);
 tls_port = _readopt("--tls-port", 4343);
 nthreads = _readopt("--threads", 8);

@@ -16,6 +16,7 @@ Options.add_option(template, "--tcp-port", "-p", "Set the TCP port", 1, 1);
 Options.add_option(template, "--tls-port", "-P", "Set the TLS port", 1, 1);
 Options.add_option(template, "--threads", "-t", "The number of worker threads", 1, 1);
 Options.add_option(template, "--show-graph", "-S", "Show the service graph and exit", 0, 0);
+Options.add_option(template, "--upgrade-http", "-U", "Upgrade HTTP to HTTPS", 0, 0);
 options = Options.parse(template, argv);
 
 import("config.pss");
@@ -40,6 +41,13 @@ if(options["parsed"]["--help"] != undefined)
 	exit(0);
 }
 
+# To redirect the port
+if(options["parsed"]["--upgrade-http"] != undefined)
+{
+	plumber.std.libconf.http.upgrade = 1;
+	plumber.std.libconf.http.upgrade_port = read_opt("--tls-port", 4343);
+}
+
 //define the file server
 fileserver = {
 	RequestParser      := "getpath";
@@ -49,10 +57,14 @@ fileserver = {
 	ResponseGenerator  := "response";
 
 	/* Setup normal logic */
-	() -> "request" RequestParser "path" -> "origin" PathParser {
-		"extname" ->  "extname" MIMEGuesser "mimetype" -> "mime";
-		"relative" -> "path" FileReader "result" -> "file"
-	} ResponseGenerator "output" -> ();
+	() -> "request" RequestParser {
+		"path" -> "origin" PathParser {
+			"extname" ->  "extname" MIMEGuesser "mimetype" -> "mime";
+			"relative" -> "path" FileReader "result" -> "file"
+		} ResponseGenerator "output" -> ();
+
+		"redir" -> "file" ResponseGenerator;
+	};
 
 
 	/* What if we got an invalid request */
