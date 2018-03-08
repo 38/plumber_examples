@@ -13,12 +13,14 @@ typedef struct {
 	pipe_t request;
 	pipe_t path;
 	pipe_t host;
+	pipe_t ac_enc;
 	pipe_t error;
 	pipe_t redir;
 
 	pstd_type_model_t*   type_model;
 	pstd_type_accessor_t path_token;
 	pstd_type_accessor_t host_token;
+	pstd_type_accessor_t ac_enc_token;
 	pstd_type_accessor_t redir_status_acc;
 	pstd_type_accessor_t redir_url_acc;
 
@@ -36,6 +38,7 @@ int init(uint32_t argc, char const* const* argv, void* data)
 	sd->path    = pipe_define("path", PIPE_OUTPUT, "plumber/std/request_local/String");
 	sd->error   = pipe_define("error", PIPE_OUTPUT, NULL);
 	sd->host    = pipe_define("host", PIPE_OUTPUT, "plumber/std/request_local/String");
+	sd->ac_enc  = pipe_define("accept_encoding", PIPE_OUTPUT, "plumber/std/request_local/String");
 	sd->redir   = pipe_define("redir", PIPE_OUTPUT, "plumber/std_servlet/filesystem/readfile/v0/Result");
 
 	if(sd->request == (pipe_t)-1 || sd->path == (pipe_t)-1 || sd->error == (pipe_t)-1)
@@ -47,6 +50,7 @@ int init(uint32_t argc, char const* const* argv, void* data)
 	sd->type_model = pstd_type_model_new();
 	sd->path_token = pstd_type_model_get_accessor(sd->type_model, sd->path, "token");
 	sd->host_token = pstd_type_model_get_accessor(sd->type_model, sd->host, "token");
+	sd->ac_enc_token = pstd_type_model_get_accessor(sd->type_model, sd->ac_enc, "token");
 	sd->redir_status_acc = pstd_type_model_get_accessor(sd->type_model, sd->redir, "status");
 	sd->redir_url_acc = pstd_type_model_get_accessor(sd->type_model, sd->redir, "redirect.token");
 	
@@ -89,6 +93,7 @@ typedef struct {
 	int has_data;
 	char path[1024];
 	char host[512];
+	char accept_encoding[512];
 	size_t path_length;
 } _state_t;
 static inline _state_t* _state_new()
@@ -99,6 +104,7 @@ static inline _state_t* _state_new()
 	state->has_data = 0;
 	state->field_name_length = state->field_value_length  = state->path_length = 0;
 	state->host[0] = 0;
+	state->accept_encoding[0] = 0;
 	return state;
 }
 
@@ -236,6 +242,10 @@ READ_ERR:
 				    state->keep_alive = 1;
 				if(strcmp(state->field_name, "host") == 0)
 				    strcpy(state->host, state->field_value);
+
+				if(strcmp(state->field_name, "accept-encoding") == 0)
+					strcpy(state->accept_encoding, state->field_value);
+
 				state->field_name_length = state->field_value_length = 0;
 				state->field_name[0] = state->field_value[0] = 0;
 			}
@@ -302,6 +312,14 @@ READ_ERR:
 		pstd_string_write(pstr, state->host, strlen(state->host));
 		scope_token_t st = pstd_string_commit(pstr);
 		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, sd->host_token, st); 
+	}
+
+	if(state->accept_encoding[0])
+	{
+		pstd_string_t* pstr = pstd_string_new(strlen(state->accept_encoding) + 1);
+		pstd_string_write(pstr, state->accept_encoding, strlen(state->accept_encoding));
+		scope_token_t st = pstd_string_commit(pstr);
+		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, sd->ac_enc_token, st); 
 	}
 
 

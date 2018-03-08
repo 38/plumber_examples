@@ -5,6 +5,7 @@
 
 /* The Virtual Hosting Static File Server Example */
 import("service");
+import("servlet");
 import("config");
 
 var get_reader = function(site_list)
@@ -56,8 +57,13 @@ var get_reader = function(site_list)
 		if(typeof(site_list[site]) == "string")
 		{
 			/* If this site is just a file server, add the file accessor */
-			Service.add_node(reader, name, "filesystem/readfile " + site_list[site]);
-			Service.add_pipe(reader, name, "result", "in" + fid, "file_merger");
+			Service.add_node(reader, name, Servlet.init("filesystem/readfile", {
+				"root"          : site_list[site],
+				"mime-map-file" : mime_type_file,
+				"input-mode"    : "string",
+				"output-mode"   : "http"
+			}));
+			Service.add_pipe(reader, name, "file", "in" + fid, "file_merger");
 			fid ++;
 		}
 		else if(typeof(site_list[site]) == "dict")
@@ -115,41 +121,24 @@ var create_service = function(site_list)
 	print(get_reader(site_list));
 	var fileserver = {
 		parsereq    := "getpath";
-		parsepath   := "filesystem/parsepath --ext-name";
-		guessmime   := "filesystem/mimetype " + mime_type_file;
 		reader      := get_reader(site_list);
-		error       := "dataflow/firstnonempty 4";
-		genres      := "response";
+		error       := "dataflow/firstnonempty 2";
+		genres      := "network/http/render --gzip --deflate --chunked --proxy";
 
 		/* Parse the request */
 		() -> "request" parsereq {
-			"path" -> "origin" parsepath {
-				/* This is the dataflow for the mime type manipulation */
-				"extname" -> "extname" guessmime "mimetype" -> "mime" genres;
-				/* Here we need to feed the demux */
-				"relative" -> "path" reader;
-			};
-			"host" -> "host" reader;
-		};
-		
-		reader {
-			"file" -> "file";
+			"path" -> "path";
+			"host" -> "host";
+		} reader {
+			"file"  -> "response";
 			"proxy" -> "proxy";
 		} genres "output" -> ();
-
+		
 		/* Handle the internal error */
 		{
 			parsereq   "__error__" -> "in0";
-			parsepath  "__error__" -> "in1";
-			guessmime  "__error__" -> "in2";
-			reader     "__error__" -> "in3";
+			reader     "__error__" -> "in1";
 		} error "out" -> "500" genres;
-
-		/* Handle the 400 error */
-		parsereq "error" -> "400" genres;
-
-		/* Handle the 403 error */
-		parsepath "__null__" -> "403" genres;
 	};
 
 	return fileserver;
@@ -160,14 +149,18 @@ server = create_service({
 	"__default__"   : {
 		req   := "proxyreq /jenkins http://plumberserver.com:8123/jenkins";
 		proxy := "network/http/proxy -P 1024 -p 1024 -T 30";
-		read  := "filesystem/readfile " + server_base_dir;
+		read  := Servlet.init("filesystem/readfile", {
+			"root"          : server_base_dir,
+			"mime-map-file" : mime_type_file,
+			"input-mode"    : "string",
+			"output-mode"   : "http"
+		});
 		(path) -> "path" req {
 			"request" -> "request" proxy "response" -> (proxy);
-			"filepath" -> "path" read "result" -> (file);
+			"filepath" -> "path"   read  "file"     -> (file);
 		};
 		proxy "__error__" -> (__error__);
-	}//,
-	//__default__     : server_base_dir_2
+	}
 });
 
 /* dump the visualization graph */

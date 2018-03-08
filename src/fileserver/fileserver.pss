@@ -6,6 +6,7 @@
 
 // Load the configuration
 import("service");
+import("servlet");
 import("daemon");
 import("options");
 
@@ -51,34 +52,24 @@ if(options["parsed"]["--upgrade-http"] != undefined)
 //define the file server
 fileserver = {
 	RequestParser      := "getpath";
-	PathParser         := "filesystem/parsepath --ext-name";
-	MIMEGuesser        := "filesystem/mimetype " + mime_type_file;
-	FileReader         := "filesystem/readfile " + server_base_dir;
-	ResponseGenerator  := "response";
+	FileReader         := Servlet.init("filesystem/readfile", {
+		"root"              : server_base_dir,
+		"mime-map-file"     : mime_type_file, 
+		"input-mode"        : "string",
+		"output-mode"       : "http"
+	});
+	ResponseGenerator  := "network/http/render --chunked --gzip --deflate";
 
 	/* Setup normal logic */
 	() -> "request" RequestParser {
-		"path" -> "origin" PathParser {
-			"extname" ->  "extname" MIMEGuesser "mimetype" -> "mime";
-			"relative" -> "path" FileReader "result" -> "file"
-		} ResponseGenerator "output" -> ();
-
-		"redir" -> "file" ResponseGenerator;
-	};
-
-
-	/* What if we got an invalid request */
-	RequestParser "error" -> "400" ResponseGenerator;
-
-	/* What if we got an invalid path */
-	PathParser "__null__" -> "403" ResponseGenerator;
+		"accept_encoding" -> "accept_encoding";
+		"path" -> "path" FileReader "file" -> "response";
+	} ResponseGenerator "output" -> ();
 
 	/* Let's handle the unexpected service error */
 	{
-		PathParser    "__error__" -> "500";
-		RequestParser "__error__" -> "500";
-		MIMEGuesser   "__error__" -> "500";
-		FileReader    "__error__" -> "500";
+		RequestParser    "__error__" -> "500";
+		FileReader       "__error__" -> "500";
 	} ResponseGenerator;
 };
 
