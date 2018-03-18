@@ -34,7 +34,7 @@ read_opt = _readopt;
 
 tcp_port = _readopt("--tcp-port", 8080);
 tls_port = _readopt("--tls-port", 4343);
-nthreads = _readopt("--threads", 8);
+nthreads = _readopt("--threads", 4);
 
 // Change the scheduler cofingurations
 scheduler.worker.default_itc_pipe = "pipe.mem";

@@ -7,6 +7,48 @@
 import("service");
 import("servlet");
 import("config");
+import("options");
+import("daemon");
+
+var template = Options.empty_template();
+Options.add_option(template, "--foreground", "-F", "Start the file server in foreground", 0, 0);
+Options.add_option(template, "--help", "-h", "Print this help message", 0, 0);
+Options.add_option(template, "--tcp-port", "-p", "Set the TCP port", 1, 1);
+Options.add_option(template, "--tls-port", "-P", "Set the TLS port", 1, 1);
+Options.add_option(template, "--threads", "-t", "The number of worker threads", 1, 1);
+Options.add_option(template, "--show-graph", "-S", "Show the service graph and exit", 0, 0);
+Options.add_option(template, "--upgrade-http", "-U", "Upgrade HTTP to HTTPS", 0, 0);
+options = Options.parse(template, argv);
+
+import("config.pss");
+
+var print_help = function() 
+{
+	print("The Simple Plumber Static Content Server");
+	print("Usage: ", options["program"], " [arguments]");
+	print("Arguments:");
+	Options.print_help(template);
+}
+
+if(len(options["unparsed"]) > 0)
+{
+	print_help();
+	exit(1);
+}
+
+if(options["parsed"]["--help"] != undefined)
+{
+	print_help();
+	exit(0);
+}
+
+# To redirect the port
+if(options["parsed"]["--upgrade-http"] != undefined)
+{
+	plumber.std.libconf.http.upgrade = 1;
+	plumber.std.libconf.http.upgrade_port = read_opt("--tls-port", 4343);
+}
+
 
 var create_reverse_proxy = function (remote_host, remote_base)
 {
@@ -100,10 +142,27 @@ var site_list = {
 	}
 };
 
-server = create_server(site_list);
+fileserver = create_server(site_list);
 
-/* dump the visualization graph */
-Service.visualize(server);
+if(options["parsed"]["--foreground"] == undefined)
+{
+	runtime.daemon.id = "plumber-file-server";
+	runtime.daemon.admin_group = "docker";
+}
 
-/* then start the file server */
-Service.start(server);
+if(options["parsed"]["--show-graph"] != undefined)
+{
+	Service.visualize(fileserver);
+	exit(0);
+}
+
+if(options["parsed"]["--foreground"] == undefined && Daemon.ping(runtime.daemon.id))
+{
+	print("Updating existing daemon");
+	Daemon.reload(runtime.daemon.id, fileserver);
+}
+else
+{
+	print("Starting new daemon");
+	Service.start(fileserver);
+}
