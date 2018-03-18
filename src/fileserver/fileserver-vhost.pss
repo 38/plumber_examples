@@ -8,7 +8,24 @@ import("service");
 import("servlet");
 import("config");
 
-var get_reader = function(site_list)
+var create_reverse_proxy = function (remote_host, remote_base)
+{
+	var ret = {
+		Rewrite := "rewrite " + remote_host + " " + remote_base;
+		Proxy   := "network/http/proxy -P 1024 -p 1024 -T 30";
+		Merger  := "dataflow/firstnonempty 2";
+
+		(request) -> "input" Rewrite "output" -> "request" Proxy "response" -> (response);
+		{
+			Rewrite "__error__" -> "in0";
+			Proxy   "__error__" -> "in1";
+		} Merger "out" -> (__error__);
+	};
+
+	return ret;
+}
+
+var create_server = function (site_list)
 {
 	var num_sites = len(site_list);
 
@@ -17,151 +34,73 @@ var get_reader = function(site_list)
 		print("Site list must have a default site");
 		return undefined;
 	}
-	
-	var selector_init_arg = "dataflow/demux";
 
-	for(var site in site_list)
-	{
-		if(site != "__default__")
-			selector_init_arg += " " + site;
-	}
-
-	var reader = {
-		selector    := selector_init_arg; 
-
-		{
-			(path) -> "data";
-			(host) -> "cond";
-		} selector;
-
-		{
-			selector "__error__" -> "in0";
-		} error "out" -> (__error__);
-	};
-	
+	var init_param = "network/http/parser";
 	var id = 0;
-	var outid = 0;
-	var fid = 0;
-	var pid = 0;
-	for(var site in site_list)
-	{
-		var name = "site_" + id;
-		var selector_port = "out" + outid;
+	
+	var ret = {
+		Render := "network/http/render --chunked --proxy";
 
-		if(site == "__default__") selector_port = "default";
-		else outid ++;
-		
-		Service.add_pipe(reader, "selector", selector_port, "path", name);
-		Service.add_pipe(reader, name, "__error__", "in" + (1 + id), "error");
-
-		if(typeof(site_list[site]) == "string")
-		{
-			/* If this site is just a file server, add the file accessor */
-			Service.add_node(reader, name, Servlet.init("filesystem/readfile", {
-				"root"          : site_list[site],
-				"mime-map-file" : mime_type_file,
-				"input-mode"    : "string",
-				"output-mode"   : "http"
-			}));
-			Service.add_pipe(reader, name, "file", "in" + fid, "file_merger");
-			fid ++;
-		}
-		else if(typeof(site_list[site]) == "dict")
-		{
-			/* If this site is defined by a subgraph, we need to handle this */
-			Service.add_node(reader, name, site_list[site]);
-
-			/* If it produces the file output, export it */
-			if(site_list[site]["@output@file"] != undefined)
-			{
-				Service.add_pipe(reader, name, "file", "in" + fid, "file_merger");
-				fid ++;
-			}
-
-			/* If it produces the proxy output */
-			if(site_list[site]["@output@proxy"] != undefined)
-			{
-				Service.add_pipe(reader, name, "proxy", "in" + pid, "proxy_merger");
-				pid ++;
-			}
-		}
-
-		id++;
-	}
-
-	var error_count = 1 + num_sites;
-
-	/* If we do have one or more file output */
-	if(fid > 0)
-	{
-		Service.add_node(reader, "file_merger", "dataflow/firstnonempty " + fid);
-		Service.add_out_port(reader, "file", "file_merger", "out");
-		Service.add_pipe(reader, "file_merger", "__error__", "in" + (error_count), "error");
-		error_count ++;
-	}
-	else Service.add_out_port(reader, "file", "__dummy__", "__dummy__");
-
-	/* If we do have one or more reverse proxy output */
-	if(pid > 0)
-	{
-		Service.add_node(reader, "proxy_merger", "dataflow/firstnonempty " + pid);
-		Service.add_out_port(reader, "proxy", "proxy_merger", "out");
-		Service.add_pipe(reader, "proxy_merger", "__error__", "in" + (error_count), "error");
-		error_count ++;
-	}
-	else Service.add_out_port(reader, "proxy", "__dummy__", "__dummy__");
-
-	Service.add_node(reader, "error", "dataflow/firstnonempty " + error_count);
-
-	return reader;
-}
-
-var create_service = function(site_list)
-{
-	print(get_reader(site_list));
-	var fileserver = {
-		parsereq    := "getpath";
-		reader      := get_reader(site_list);
-		error       := "dataflow/firstnonempty 2";
-		genres      := "network/http/render --gzip --deflate --chunked --proxy";
-
-		/* Parse the request */
-		() -> "request" parsereq {
-			"path" -> "path";
-			"host" -> "host";
-		} reader {
-			"file"  -> "response";
-			"proxy" -> "proxy";
-		} genres "output" -> ();
-		
-		/* Handle the internal error */
-		{
-			parsereq   "__error__" -> "in0";
-			reader     "__error__" -> "in1";
-		} error "out" -> "500" genres;
+		() -> "input" Parser "protocol_data" -> "protocol_data" Render "output" -> ();
 	};
 
-	return fileserver;
+	for(var key in site_list)
+	{
+		var port = "site_" + id;
+
+		if(key == "__default__") 
+			port = "default";
+		else 
+			init_param += " --route " + "name:site_" + (id) + ";prefix:" + key;
+
+		if(site_list[key]["type"] == "static")
+		{
+			Service.add_node(ret, port, Servlet.init("filesystem/readfile", {
+				"root"          : site_list[key]["root"],
+				"mime-map-file" : mime_type_file,
+				"input-mode"    : "http",
+				"output-mode"   : "http",
+				"range-access"  : undefined,
+				"compressable"      : "text/*,application/*javascript*,application/*xml*,application/*json*"   	
+			}));
+
+			Service.add_pipe(ret, port, "__error__", "500", "Render");
+			Service.add_pipe(ret, "Parser", port, "request", port);
+			Service.add_pipe(ret, port, "file", "response", "Render");
+		}
+		else if(site_list[key]["type"] == "proxy")
+		{
+			Service.add_node(ret, port, create_reverse_proxy(site_list[key]["host"], site_list[key]["base"]));
+
+			Service.add_pipe(ret, port, "__error__", "500", "Render");
+			Service.add_pipe(ret, "Parser", port, "request", port);
+			Service.add_pipe(ret, port, "response", "proxy", "Render");
+		}
+		id ++;
+	}
+
+	Service.add_node(ret, "Parser", init_param);
+
+	return ret;
 }
 
-server = create_service({
-	"localhost:8080": server_base_dir,
-	"__default__"   : {
-		req   := "proxyreq /jenkins http://plumberserver.com:8123/jenkins";
-		proxy := "network/http/proxy -P 1024 -p 1024 -T 30";
-		read  := Servlet.init("filesystem/readfile", {
-			"root"          : server_base_dir,
-			"mime-map-file" : mime_type_file,
-			"input-mode"    : "string",
-			"output-mode"   : "http"
-		});
-		(path) -> "path" req {
-			"request" -> "request" proxy "response" -> (proxy);
-			"filepath" -> "path"   read  "file"     -> (file);
-		};
-		proxy "__error__" -> (__error__);
+var site_list = {
+	"__default__": {
+		"type": "static",
+		"root": server_base_dir 
+	},
+	"localhost:8080/jenkins": {
+		"type": "proxy",
+		"host": "plumberserver.com:8123",
+		"base": "/jenkins"
+	},
+	"localhost:4343/" : {
+		"type": "static",
+		"root": server_base_dir_2
 	}
-});
+};
+
+server = create_server(site_list);
 
 /* dump the visualization graph */
 Service.visualize(server);

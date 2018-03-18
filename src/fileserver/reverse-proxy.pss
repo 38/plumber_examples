@@ -49,51 +49,45 @@ if(options["parsed"]["--upgrade-http"] != undefined)
 	plumber.std.libconf.http.upgrade_port = read_opt("--tls-port", 4343);
 }
 
-//define the file server
-fileserver = {
+proxy_server = {
 	RequestParser      := "network/http/parser";
-	FileReader         := Servlet.init("filesystem/readfile", {
-		"root"              : server_base_dir,       /* The default directory */
-		"mime-map-file"     : mime_type_file,        /* The MIME type spec, using apache format */
-		"input-mode"        : "http",                /* Takes an HTTP request */
-		"output-mode"       : "http",                /* Produces an HTTP response */
-		"range-access"      : undefined,             /* Allow access a range */
-		"compressable"      : "text/*,application/*javascript*,application/*xml*,application/*json*"   	
-	});
-	ResponseGenerator  := "network/http/render --chunked --gzip --deflate";
+	Rewrite            := "rewrite plumberserver.com:8123 /";
+	Proxy              := "network/http/proxy  -P 1024 -p 1024 -T 30";
+	ResponseGenerator  := "network/http/render --proxy";
 
 	/* Setup normal logic */
 	() -> "input" RequestParser {
 		"protocol_data" -> "protocol_data";
-		"default" -> "request" FileReader "file" -> "response";
+		"default" -> "input" Rewrite "output" -> "request" Proxy "response" -> "proxy";
 	} ResponseGenerator "output" -> ();
 
 	/* Let's handle the unexpected service error */
 	{
 		RequestParser    "__error__" -> "500";
-		FileReader       "__error__" -> "500";
+		Rewrite          "__error__" -> "500";
+		Proxy            "__error__" -> "500";
 	} ResponseGenerator;
 };
 
 if(options["parsed"]["--foreground"] == undefined)
 {
-	runtime.daemon.id = "plumber-file-server";
+	runtime.daemon.id = "plumber-proxy-server";
 	runtime.daemon.admin_group = "docker";
 }
 
 if(options["parsed"]["--show-graph"] != undefined)
 {
-	Service.visualize(fileserver);
+	Service.visualize(proxy_server);
 	exit(0);
 }
 
 if(options["parsed"]["--foreground"] == undefined && Daemon.ping(runtime.daemon.id))
 {
 	print("Updating existing daemon");
-	Daemon.reload(runtime.daemon.id, fileserver);
+	Daemon.reload(runtime.daemon.id, proxy_server);
 }
 else
 {
 	print("Starting new daemon");
-	Service.start(fileserver);
+	Service.start(proxy_server);
 }

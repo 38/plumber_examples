@@ -1,4 +1,4 @@
-SERVLETS=getpath proxyreq
+SERVLETS=rewrite
 CFLAGS=-g -Wall -DLOG_LEVEL=0 -O3
 
 include ../../shared.mk
