@@ -91,9 +91,22 @@ var create_server = function (site_list)
 		var port = "site_" + id;
 
 		if(key == "__default__") 
+		{
 			port = "default";
+			if(site_list[key]["https"] == 1)
+				init_param += " --upgrade-default";
+			else if(site_list[key]["https"] != undefined)
+				init_param += " --upgrade-default " + site_list[key]["https"];
+		}
 		else 
-			init_param += " --route " + "name:site_" + (id) + ";prefix:" + key;
+		{
+			var upgrade_suffix = ""
+			if(site_list[key]["https"] == 1)
+				upgrade_suffix = ";upgrade_http"
+			else if(site_list[key]["https"] != undefined)
+				upgrade_suffix = ";upgrade_http:" + site_list[key]["https"];
+			init_param += " --route " + "name:site_" + (id) + ";prefix:" + key + upgrade_suffix;
+		}
 
 		if(site_list[key]["type"] == "static")
 		{
@@ -129,7 +142,7 @@ var create_server = function (site_list)
 var site_list = {
 	"__default__": {
 		"type": "static",
-		"root": server_base_dir 
+		"root": server_base_dir
 	},
 	"localhost:8080/jenkins": {
 		"type": "proxy",
