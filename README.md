@@ -14,4 +14,38 @@ This repository provides an easy way to try Plumber in an isolated directory.
 
 	git clone --recursive https://github.com/38/plumber_examples.git
 	cd plumber_examples && ./init
+	
+
+```bash
+git clone --recursive https://github.com/38/plumber_examples.git
+```
+
+The minimal required dependencies are 
+
+	- Python 2 (Python 2.7 Recommended)
+	- CMake 2.6 or later (CMake 3+ Recommended)
+	- libreadline 
+	- GCC and G++ (GCC-5 Recommended)
+	- GNU Make
+	
+for Ubuntu users, use command
+
+```bash
+sudo apt-get install python-2.7 cmake libreadline-dev gcc g++ pkg-config make
+```
+
+for MacOS users, use command
+
+```bash
+sudo brew install cmake openssl@1.0 ossp-uuid pkg-config  pkgconfig   readline
+```
+
+After installed all the dependencies, use the following command to enter the environment.
+
+```bash
+cd plumber_examples
+./init 
+```
+
+In the environment, you should be able to build and run the examples under `src` directory.
 
