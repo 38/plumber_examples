@@ -27,11 +27,14 @@ The minimal required dependencies are
 	- libreadline 
 	- GCC and G++ (GCC-5 Recommended)
 	- GNU Make
+	- zsh (For the startup script)
+	- pkg-config 
+	- OpenSSL (For SSL support)
 	
 for Ubuntu users, use command
 
 ```bash
-sudo apt-get install python-2.7 cmake libreadline-dev gcc g++ pkg-config make
+apt-get install cmake gcc g++ uuid-dev libssl-dev pkg-config python2.7 libpython2.7-dev libreadline-dev zsh
 ```
 
 for MacOS users, use command
