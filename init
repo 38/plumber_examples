@@ -76,7 +76,7 @@ function parse_options() {
 				realenv="$(argv ${arg})";;;
 			--javascript-prebuild )
 				javascript="yes"
-				js_prebuilt="http://plumberserver.com/data/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
+				js_prebuilt="http://plumberserver.com/downloads/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
 				need reconfigure;;;
 			--javascript-prebuild=* )
 				javascript="yes"
