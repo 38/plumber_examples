@@ -1,0 +1,44 @@
+/* This is the example demonstrates how the type system of Plumber works
+ * The example is a simple program that reads two number a and b from STDIN,
+ * and produce the sum of two numbers to the STDOUT
+ *
+ * In order to demonstrate the typed data transmission, we split the program into 
+ * two components:
+ *     - input-parser : Parse the two number and produces typed result plumber_intro.typed_guest.adder_input
+ *     - adder        : Takes the typed result plumber_intro.typed_guest.adder_input and produces the sum of two number as string
+ *
+ * We also demostrate Plumber's type checking mechanism will descover the mis-connected components before the dataflow graph gets launched.
+ */
+
+insmod("pssm");
+insmod("mem_pipe");
+insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
+
+runtime.servlet.path += ":./bin";
+
+var adder_graph = {
+
+	parse_node := "input-parser";
+	adder_node := "adder";
+
+	/* Just connect components as normal, but the port output of parse_node is strong typed
+	 * In fact all the data transmitted between parse_node and adder_node is now binary instead
+	 * of plain text. So this reduces the time for serialization and deserialization */
+	() -> "input" parse_node "output"
+	   -> "input" adder_node "output" -> ();
+};
+
+/*
+//To demostrate the type checking feature of Plumber, uncommonent this block, which would replace the 
+//dataflow graph with the one doesn't correctly connect. 
+//Because the copier_node doesn't produces the output adder_node can use
+adder_graph = {
+	copier_node := "dataflow/firstnonempty 1";
+	adder_node  := "adder";
+
+	() -> "in0" copier_node "out" -> "input" adder_node "output" -> ();
+};
+*/
+
+import("service");
+Service.start(adder_graph);

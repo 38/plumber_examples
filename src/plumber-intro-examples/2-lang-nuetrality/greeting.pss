@@ -1,22 +1,53 @@
+/* This is the example that demostrate Plumber's language neutral feature
+ * Plumber allows binding component written in different programming language into the same
+ * dataflow graph without any complexity about cross-language interaction.
+ * 
+ * In this example, each of the node is written in different programming language.
+ * For each node, it copies the previous output and append the greeting message with the name of the language
+ *
+ * The example demostrates we are able to connect them together
+ */
+
+
+/* First of all, we need to install the required modules, so that the Plumber dataflow graph engine
+ * can take some input from console.
+ * We also install a module called Plumber Standard Service Module (PSSM) for some extension such as memory pool to guest code
+ * Memory Pipe Module is the default inter-guest-code communication method
+ */
 insmod("pssm");
 insmod("mem_pipe");
 insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
 
-scheduler.async.nthreads = 1;
+/* In order to create the node for the guest code, we should add our binary path to the guest code search path, so that
+ * Plumber is able to find the code
+ */
 runtime.servlet.path += ":./bin";
-plumber.std.libconf.pyservlet.path = "py-greeter";
 
+/* For python guest code, we need to add the module path to the python adapter so that Python can find the guest code as a python module */
+plumber.std.libconf.pyservlet.path = "./py-greeter";
+
+/* Now we build the graph */
 var greet_graph = {
+	/* For the programming language that procedures the native code, we can simply load the guest code by itsname */
 	greet_in_c := "c-greeter";
 	greet_in_cpp := "cpp-greeter";
+	
+	/* For the programming language that requires a runtime environment. Similar to operating system, we need a loader code so that the
+	 * Plumber dataflow platform can load the guest code into memory and manages the runtime environment that is required.
+	 *
+	 * For python, the loader is called pyservlet
+	 * For javascript, the loader is called javascript
+	 */
 	greet_in_py  := "language/pyservlet py-greeter";
 	greet_in_js  := "language/javascript js-greeter/js-greeter.js";
 
+	/* We can bind the node normally eventough they are written in different programming language */
 	() -> "input" greet_in_c "output" 
 	   -> "input" greet_in_js "output"
 	   -> "input" greet_in_cpp "output"
 	   -> "input" greet_in_py "output" -> ();
 };
 
+/* Finally, let's start the dataflow graph to process the input from STDIN */
 import("service");
 Service.start(greet_graph);

@@ -1,0 +1,6 @@
+package plumber_intro.typed_guest;
+
+type adder_input {
+	uint32  a;
+	uint32  b;
+};
