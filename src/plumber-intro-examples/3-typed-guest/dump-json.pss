@@ -1,0 +1,17 @@
+insmod("pssm");
+insmod("mem_pipe");
+insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
+
+runtime.servlet.path += ":./bin";
+
+var adder_graph = {
+
+	parse_node := "input-parser";
+	dump_node  := "typing/conversion/json --to-json --raw input:$T";
+
+	() -> "input" parse_node "output"
+	   -> "input" dump_node "json" -> ();
+};
+
+import("service");
+Service.start(adder_graph);
