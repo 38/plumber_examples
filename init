@@ -62,6 +62,9 @@ CXX=g++
 LOG=3
 shell=zsh
 
+javascript="yes"
+js_prebuilt="http://plumberserver.com/downloads/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
+
 [ ! -e ${BUILDDIR}/plumber/Makefile ] && need reconfigure
 [ ! -e ${BUILDDIR}/plumber/bin/pscript ] && need recompile
 [ ! -e ${INSTALLDIR}/bin/pscript ] && need reinstall
@@ -74,9 +77,8 @@ function parse_options() {
 				realenv="/";;;
 			--real=* )
 				realenv="$(argv ${arg})";;;
-			--javascript-prebuild )
-				javascript="yes"
-				js_prebuilt="http://plumberserver.com/downloads/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
+			--no-javascript-prebuild )
+				javascript="no"
 				need reconfigure;;;
 			--javascript-prebuild=* )
 				javascript="yes"
