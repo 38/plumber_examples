@@ -1,0 +1,22 @@
+insmod("pssm");
+insmod("mem_pipe");
+insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
+
+scheduler.async.nthreads = 1;
+runtime.servlet.path += ":./bin";
+plumber.std.libconf.pyservlet.path = "py-greeter";
+
+var greet_graph = {
+	greet_in_c := "c-greeter";
+	greet_in_cpp := "cpp-greeter";
+	greet_in_py  := "language/pyservlet py-greeter";
+	greet_in_js  := "language/javascript js-greeter/js-greeter.js";
+
+	() -> "input" greet_in_c "output" 
+	   -> "input" greet_in_js "output"
+	   -> "input" greet_in_cpp "output"
+	   -> "input" greet_in_py "output" -> ();
+};
+
+import("service");
+Service.start(greet_graph);
