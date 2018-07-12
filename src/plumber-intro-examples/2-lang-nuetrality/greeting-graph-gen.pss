@@ -1,0 +1,58 @@
+/* In this file we demostrate the sub graph */
+
+insmod("pssm");
+insmod("mem_pipe");
+insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
+
+runtime.servlet.path += ":./bin";
+plumber.std.libconf.pyservlet.path = "./py-greeter";
+
+var greeter_components = {
+	"C"         : "c-greeter",
+	"C++"       : "cpp-greeter",
+	"Python"    : "language/pyservlet py-greeter",
+	"Javascript": "language/javascript js-greeter/js-greeter.js"
+};
+
+import("service");
+
+var create_greeting_subgraph = function (greeters) {
+	var list = split(greeters, ",");
+
+	var subgraph = {};
+
+	var last_node = undefined;
+
+	for(var i = 0; i < len(list); i ++)
+	{
+		Service.add_node(subgraph, "greeter_" + i,                /* name */ 
+				                    greeter_components[list[i]]); /* component */
+
+		if(last_node != undefined)
+		{
+			Service.add_pipe(subgraph, last_node,        /* from_node */
+					                   "output",         /* from_port */
+									   "input",          /* to_port */
+									   "greeter_" + i);  /* to_node */
+		}
+
+		last_node = "greeter_" + i;
+	}
+
+	Service.add_in_port(subgraph, "input",        /* name */
+			                       "greeter_0",   /* node */
+								   "input");      /* port */
+
+	Service.add_out_port(subgraph, "output",      /* name */
+			                        last_node,    /* node */
+									"output");    /* port */
+
+	print(subgraph);
+
+	return subgraph;
+}
+
+Service.start({
+	greeting := create_greeting_subgraph("C,C++,Javascript,C++,Python,C");
+	() -> "input" greeting "output" -> ();
+});
