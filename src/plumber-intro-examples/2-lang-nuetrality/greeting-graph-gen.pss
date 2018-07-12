@@ -1,4 +1,4 @@
-/* In this file we demostrate the sub graph */
+/* In this file we demostrate programatically construction of a dataflow graph */
 
 insmod("pssm");
 insmod("mem_pipe");
@@ -7,6 +7,9 @@ insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
 runtime.servlet.path += ":./bin";
 plumber.std.libconf.pyservlet.path = "./py-greeter";
 
+import("service");
+
+/* In this demo, we create a map from name of programming languages to the greeter component name */
 var greeter_components = {
 	"C"         : "c-greeter",
 	"C++"       : "cpp-greeter",
@@ -14,22 +17,26 @@ var greeter_components = {
 	"Javascript": "language/javascript js-greeter/js-greeter.js"
 };
 
-import("service");
-
+/* This is a function that create the greeting the subgraph */
 var create_greeting_subgraph = function (greeters) {
+
 	var list = split(greeters, ",");
 
+	/* First of all, we create an empty dataflow graph */
 	var subgraph = {};
 
 	var last_node = undefined;
 
 	for(var i = 0; i < len(list); i ++)
 	{
+		/* Now we can use Service.add_node to programtically add a node to the dataflow graph */
 		Service.add_node(subgraph, "greeter_" + i,                /* name */ 
 				                    greeter_components[list[i]]); /* component */
 
 		if(last_node != undefined)
 		{
+			/* To add a connection between two nodoes programtically, we will be able to use
+			   Service.add_pipe */
 			Service.add_pipe(subgraph, last_node,        /* from_node */
 					                   "output",         /* from_port */
 									   "input",          /* to_port */
@@ -39,6 +46,10 @@ var create_greeting_subgraph = function (greeters) {
 		last_node = "greeter_" + i;
 	}
 
+	/* We can define the input and output ports with the API as well, 
+	   if the graph object is a dataflow graph rather than a subgraph,
+	   we can use empty string "" as the name of the port to add the source 
+	   or the sink of the dataflow graph */
 	Service.add_in_port(subgraph, "input",        /* name */
 			                       "greeter_0",   /* node */
 								   "input");      /* port */
@@ -47,12 +58,16 @@ var create_greeting_subgraph = function (greeters) {
 			                        last_node,    /* node */
 									"output");    /* port */
 
-	print(subgraph);
-
+	/* Return the subgraph, so that we can use the subgraph in other dataflow graph or subgraph */
 	return subgraph;
 }
 
+/* Now let's make a dataflow graph use the subgraph generator we have created */
 Service.start({
+	/* To declare the programtically generated subgraph, we can simple declare the node as the 
+	   the return value of the subgraph genreation function */
 	greeting := create_greeting_subgraph("C,C++,Javascript,C++,Python,C");
+
+	/* Then we are able to connect the input and output to the source and sink */
 	() -> "input" greeting "output" -> ();
 });
