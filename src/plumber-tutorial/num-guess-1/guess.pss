@@ -1,0 +1,33 @@
+// Install the required basic modules 
+insmod("pssm");
+insmod("mem_pipe");
+
+// Install the event accepting module, so that the dataflow graph can accept event from the console and 
+// Write the response to the console
+insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
+
+// Import the service library which defines the helper function to run a dataflow graph
+import("service");
+
+// Also, we need tell the framework where to find the servlet binary
+runtime.servlet.path += ":.";
+
+// Define the dataflow graph we want to run
+var graph = {
+	// Declare the node `guess_node` which is a instance of guest code `guess` we just compiled
+	guess_node := "guess";
+
+	// The dataflow graph is quit simple, it just bind the data source to the `input` port of `guess_node`
+	// and `output` port to the data sink.
+	() -> "input" guess_node "output" -> ();
+};
+
+/*
+// The following code will produce a Graphviz visualization to standard output
+Service.visualize(graph);
+*/
+
+// Call the function Service.start will get the dataflow graph start to run.
+// Because we installed the event accepting module which reads and writes console
+// So the dataflow grpah will interact with player through console
+Service.start(graph);
