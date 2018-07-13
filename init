@@ -283,7 +283,7 @@ function show_info() {
 	echo "  To check if you are in the Plumber Isolated Environment, use command whereami"
 	echo "  To quit the environment, please exit current shell"
 	echo ""
-	echo "  Plumber Version                        `pscript --version  |& grep 'Libplumber' | awk -F': ' '{print $2}'`"
+	echo "  Plumber Version                        `pscript --version 2>/dev/stdout |  grep 'Libplumber' | awk -F': ' '{print $2}'`"
 	echo "  Plumber Service Script Interpreter     pscript  at `which pscript`"
 	echo "  Plumber Servlet Testbed                pstest   at `which pstest`"
 	echo "  Protocol Management Tool               protoman at `which protoman`"
@@ -300,6 +300,11 @@ chmod +x ${INSTALLDIR}/bin/whereami
 
 mkdir -p ${INSTALLDIR}/var/run/plumber
 
+if [ ${OS_NAME} = "Darwin" ]
+then
+DYLD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
+DYLD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1
+else
 LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
-
 LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1
+fi
