@@ -244,7 +244,10 @@ then
 			mkdir -p ${BUILDDIR}/plumberv8
 			${SOURCEDIR}/plumberv8/buildv8 --configure-name=x64.release --output=${BUILDDIR}/plumberv8/ --prefix=${INSTALLDIR} --install || exit 1
 		else
-			${SOURCEDIR}/plumberv8/buildv8 --install-only=${js_prebuilt} --prefix=${INSTALLDIR} || exit 1
+			if [ ! -e ${INSTALLDIR}/bin/plumber-v8-config ]
+			then
+				${SOURCEDIR}/plumberv8/buildv8 --install-only=${js_prebuilt} --prefix=${INSTALLDIR} || exit 1
+			fi
 		fi
 	fi
 	mkdir -p ${BUILDDIR}/plumber || exit 1
