@@ -213,12 +213,12 @@ fi
 
 if [ "x${javascript}" = "xyes" ]
 then
-	JS_PARAM=(-DPLUMBER_V8_PREFIX=${INSTALLDIR} -Dbuild_language_javascript=yes)
+	JS_PARAM="-DPLUMBER_V8_PREFIX=${INSTALLDIR} -Dbuild_language_javascript=yes"
 fi
 
 if [ "x${javascript}" = "xexternal" ]
 then
-	JS_PARAM=(-DPLUMBER_V8_PREFIX=${v8prefix} -Dbuild_language_javascript=yes)
+	JS_PARAM="-DPLUMBER_V8_PREFIX=${v8prefix} -Dbuild_language_javascript=yes"
 fi
 
 if [ ! -z "${commit}" ]
