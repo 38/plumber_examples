@@ -281,8 +281,14 @@ then
 	pushd ${BUILDDIR}/plumber
 	make -j ${NCPUS} install || exit 1
 	popd
-	LD_LIBRARY_PATH=${INSTALLDIR}/lib ${INSTALLDIR}/bin/protoman --update --yes prototypes/*.ptype || exit 1
-	LD_LIBRARY_PATH=${INSTALLDIR}/lib sh ${BUILDDIR}/plumber/install-prototype.sh || exit 1
+	if [ ${OS_NAME} = "Darwin" ]
+	then
+		DYLD_LIBRARY_PATH=${INSTALLDIR}/lib ${INSTALLDIR}/bin/protoman --update --yes prototypes/*.ptype || exit 1
+		DYLD_LIBRARY_PATH=${INSTALLDIR}/lib sh ${BUILDDIR}/plumber/install-prototype.sh || exit 1
+	else
+		LD_LIBRARY_PATH=${INSTALLDIR}/lib ${INSTALLDIR}/bin/protoman --update --yes prototypes/*.ptype || exit 1
+		LD_LIBRARY_PATH=${INSTALLDIR}/lib sh ${BUILDDIR}/plumber/install-prototype.sh || exit 1
+	fi
 fi
 
 function show_info() {
@@ -312,9 +318,9 @@ mkdir -p ${INSTALLDIR}/var/run/plumber
 
 if [ ${OS_NAME} = "Darwin" ]
 then
-DYLD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
-DYLD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1
+	DYLD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
+	DYLD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1
 else
-LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
-LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1
+	LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` show_info
+	LD_LIBRARY_PATH=${INSTALLDIR}/lib PATH=${INSTALLDIR}/bin:${PATH} ENVROOT=${INSTALLDIR} REPOROOT=`pwd` ${shell} || exit 1
 fi
