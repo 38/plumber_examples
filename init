@@ -1,8 +1,21 @@
-#!/bin/zsh
+#!/bin/bash
 BUILDDIR=`pwd`/build
 INSTALLDIR=`pwd`/installed
 SOURCEDIR=`pwd`/dependencies
-NCPUS=`grep 'processor' /proc/cpuinfo  | wc -l`
+
+OS_NAME=`uname -s`
+
+case ${OS_NAME} in
+	Linux ) 
+		NCPUS=`grep 'processor' /proc/cpuinfo  | wc -l`
+		;;
+	Darwin )
+		NCPUS=`sysctl -n hw.ncpu`
+		;;
+	* )
+		echo "Unsupported OS name ${OS_NAME}"
+		exit -1
+esac
 
 function print_help() {
 	echo "Initialize the Plumber Isolated Environment"
@@ -74,77 +87,77 @@ function parse_options() {
 	do
 		case ${arg} in
 			--real )
-				realenv="/";;;
+				realenv="/";;
 			--real=* )
-				realenv="$(argv ${arg})";;;
+				realenv="$(argv ${arg})";;
 			--no-javascript-prebuild )
 				javascript="no"
-				need reconfigure;;;
+				need reconfigure;;
 			--javascript-prebuild=* )
 				javascript="yes"
 				js_prebuilt="$(argv --string ${arg})"
 				need reconfigure
-				;;;
+				;;
 			--javascript ) 
 				javascript="yes"
-				need reconfigure;;;
+				need reconfigure;;
 			--javascript=* )
 				javascript="external"
 				v8prefix="$(argv --string ${arg})"
-				need reconfigure;;;
+				need reconfigure;;
 			--reconfigure )
 				cmake_param=""
-				need reconfigure;;;
+				need reconfigure;;
 			--reconfigure=* )
 				cmake_param="$(argv --string ${arg})"
-				need reconfigure;;;
+				need reconfigure;;
 			--recompile )
-				need recompile;;;
+				need recompile;;
 			--reinstall )
-				need reinstall;;;
+				need reinstall;;
 			--reinstall=* )
 				INSTALLDIR="$(argv ${arg})"
-				need reconfigure;;;
+				need reconfigure;;
 			--commit=* )
 				commit="$(argv --string ${arg})"
 				need recompilel;;
 			--test )
-				runtest="yes";;;
+				runtest="yes";;
 			--remove )
-				remove="yes";;;
+				remove="yes";;
 			--shell=* )
-				shell="$(argv --string ${arg})";;;
+				shell="$(argv --string ${arg})";;
 			--gproftools )
 				LIBS=$(strip "${LIBS} -lprofiler")
 				CFLAGS=$(strip "${CFLAGS} -DGPROFTOOLS")
-				need reconfigure;;;
+				need reconfigure;;
 			--sync )
 				sync="yes"
-				need recompile;;;
+				need recompile;;
 			--cc=* )
 				CC="$(argv --string ${arg})"
-				need reconfigure;;;
+				need reconfigure;;
 			--cxx=* )
 				CXX="$(argv --string ${arg})"
-				need reconfigure;;;
+				need reconfigure;;
 			--cflags=* )
 				CFLAGS="$(strip "${CFLAGS} $(argv --string ${arg})")"
-				need reconfigure;;;
+				need reconfigure;;
 			--cxxflags=* )
 				CXXFLAGS="$(strip "${CXXFLAGS} $(argv --string ${arg})")"
-				need reconfigure;;;
+				need reconfigure;;
 			--ldflags=* )
 				LIBS="$(strip "${LIBS} $(argv --string ${arg})")"
-				need reconfigure;;;
+				need reconfigure;;
 			--log=* )
 				LOG="$(argv --string ${arg})"
-				need reconfigure;;;
+				need reconfigure;;
 			--optimization=[0-5] )
 				OPT="$(argv --string ${arg})"
-				need reconfigure;;;
+				need reconfigure;;
 			--help )
 				print_help
-				exit 0;;;
+				exit 0;;
 			* )
 				echo "Invalid argument ${arg}"
 				print_help
