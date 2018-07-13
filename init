@@ -75,8 +75,18 @@ CXX=g++
 LOG=3
 shell=zsh
 
-javascript="yes"
-js_prebuilt="http://plumberserver.com/downloads/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
+case ${OS_NAME} in
+	Linux )
+		javascript="yes"
+		js_prebuilt="http://plumberserver.com/downloads/plumberv8-prebuild.6.3.0.x64.release.tar.gz"
+		;;
+	Darwin)
+		javascript="yes"
+		js_prebuilt="http://plumberserver.com/downloads/plumberv8-prebuild.latest.x64.release.darwin.tar.gz"
+		;;
+	*)
+		javascript="no"
+esac
 
 [ ! -e ${BUILDDIR}/plumber/Makefile ] && need reconfigure
 [ ! -e ${BUILDDIR}/plumber/bin/pscript ] && need recompile
