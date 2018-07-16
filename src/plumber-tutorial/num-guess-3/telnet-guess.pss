@@ -1,0 +1,20 @@
+// Install the required basic modules 
+insmod("pssm");
+insmod("mem_pipe");
+
+// Instead of using text_file module, this time we install the TCP module, so that we can convert the game a Telnet based
+insmod("tcp_pipe 54321");
+
+// Import the service library which defines the helper function to run a dataflow graph
+import("service");
+
+// Also, we need tell the framework where to find the servlet binary
+runtime.servlet.path += ":.";
+
+// Define the dataflow graph we want to run
+var graph = {
+	guess_node := "guess";
+	() -> "input" guess_node "output" -> ();
+};
+
+Service.start(graph);
