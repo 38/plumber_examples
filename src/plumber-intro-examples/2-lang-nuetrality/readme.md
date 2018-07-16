@@ -30,15 +30,15 @@ pscript <pss-filename>
 ```
 .
 ├── c-greeter                   ; The greeter component written in C
-│   ├── build.mk               ; 
-│   └── c-greeter.c            ;
+│   ├── build.mk                ; 
+│   └── c-greeter.c             ;
 ├── cpp-greeter                 ; The greeter component written in C++ 
-│   ├── build.mk               ;
-│   └── cpp-greeter.cpp        ;
+│   ├── build.mk                ;
+│   └── cpp-greeter.cpp         ;
 ├── py-greeter                  ; The greeter component written in Python 
-│   └── py-greeter.py          ;
+│   └── py-greeter.py           ;
 ├── js-greeter                  ; The greeter component written in Javascript
-│   └── js-greeter.js          ;
+│   └── js-greeter.js           ;
 ├── greeting-graph-gen.pss      ; The Graph Generator Example
 ├── greeting.pss                ; The Simple mixed language dataflow graph
 ├── greeting-subgraph.pss       ; The subgraph example 
@@ -48,3 +48,7 @@ pscript <pss-filename>
 # Details
 
 For more detailed description, please read the introduction of Plumber at [this link](https://plumberserver.com/).
+
+- For the Language Neutrality Example please read this [section](https://plumberserver.com/index.html#home.main@creating-dataflow-graph-with-mixed-guest-languages)
+- For the Subgraph Example, please read this [section](https://plumberserver.com/index.html#home.main@create-a-subgraph)
+- For the Graph Metaprogramming example, please read this [section](https://plumberserver.com/index.html#home.main@create-a-dataflow-graph-programmatically)
