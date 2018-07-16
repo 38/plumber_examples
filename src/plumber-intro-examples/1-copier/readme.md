@@ -7,4 +7,4 @@ The example will read the standard input and copy the read result to the standar
 
 Use `pscript copier.pss` to run the example.
 
-For the details about this example, please read the introduction of Plumber at [this link](https://plumberserver.com)
+For the details about this example, please read the introduction of Plumber at [this link](https://plumberserver.com/index.html#home.main@creating-and-running-dataflow-graph)
