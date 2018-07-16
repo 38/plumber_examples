@@ -1,0 +1,20 @@
+insmod("pssm");
+insmod("mem_pipe");
+insmod("tcp_pipe 54321");
+import("service");
+
+// Because a daemonized process should change current working process
+// to /, so we need use absolute path.
+runtime.servlet.path += ":" + getcwd();
+
+// To make the dataflow graph a daemon is just change the platform config 
+// runtime.daemon.id and you should be able to manage the daemon using
+// plumber-daemons, plumber-daemon-ping, plumber-daemon-stop
+runtime.daemon.id = "num-guess-server";
+
+var graph = {
+	guess_node := "guess";
+	() -> "input" guess_node "output" -> ();
+};
+
+Service.start(graph);
