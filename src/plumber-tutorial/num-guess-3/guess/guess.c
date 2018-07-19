@@ -5,6 +5,7 @@
 #include <pstd.h>
 
 typedef struct {
+	uint32_t upper_range;
     pipe_t   input, output;
 } private_context_t;
 
@@ -20,14 +21,16 @@ static int _init(uint32_t argc, char const* const* argv, void* ctxbuf)
 	context->input = pipe_define("input", PIPE_INPUT | PIPE_PERSIST, NULL);
 	context->output = pipe_define("output", PIPE_OUTPUT, NULL);
 
+	context->upper_range = argc > 1 ? atoi(argv[1]) : 100;
+
     return 0;
 }
 
-static game_session_t* _create_session()
+static game_session_t* _create_session(private_context_t* ctx)
 {
 	game_session_t* ret = (game_session_t*)malloc(sizeof(game_session_t));
 	
-    ret->answer = (rand() % 100);
+    ret->answer = (rand() % ctx->upper_range);
     ret->times_guessed = 0;
 
 	LOG_ERROR("The answer is %d", ret->answer);
@@ -57,7 +60,7 @@ static int _exec(void* ctxbuf)
 	// If there's no session attached, we just get a new session, so create a new game session
 	// for it
 	if(NULL == cur_session) 
-		cur_session = _create_session();
+		cur_session = _create_session(context);
 
 	// Read the user input
 	char buf[128];
