@@ -22,7 +22,7 @@ options = Options.parse(template, argv);
 
 import("config.pss");
 
-var print_help = function() 
+var print_help = function()
 {
 	print("The Simple Plumber Static Content Server");
 	print("Usage: ", options["program"], " [arguments]");
@@ -71,7 +71,7 @@ var create_server = function (site_list)
 {
 	var num_sites = len(site_list);
 
-	if(site_list["__default__"] == undefined) 
+	if(site_list["__default__"] == undefined)
 	{
 		print("Site list must have a default site");
 		return undefined;
@@ -79,7 +79,7 @@ var create_server = function (site_list)
 
 	var init_param = "network/http/parser";
 	var id = 0;
-	
+
 	var ret = {
 		Render := "network/http/render --chunked --proxy";
 
@@ -90,7 +90,7 @@ var create_server = function (site_list)
 	{
 		var port = "site_" + id;
 
-		if(key == "__default__") 
+		if(key == "__default__")
 		{
 			port = "default";
 			if(site_list[key]["https"] == 1)
@@ -98,11 +98,11 @@ var create_server = function (site_list)
 			else if(site_list[key]["https"] != undefined)
 				init_param += " --upgrade-default " + site_list[key]["https"];
 		}
-		else 
+		else
 		{
 			var upgrade_suffix = ""
 			if(site_list[key]["https"] == 1)
-				upgrade_suffix = ";upgrade_http"
+				upgrade_suffix = ";upgrade_http";
 			else if(site_list[key]["https"] != undefined)
 				upgrade_suffix = ";upgrade_http:" + site_list[key]["https"];
 			init_param += " --route " + "name:site_" + (id) + ";prefix:" + key + upgrade_suffix;
@@ -111,17 +111,17 @@ var create_server = function (site_list)
 		if(site_list[key]["type"] == "static")
 		{
 			Service.add_node(ret, port, Servlet.init("filesystem/readfile", {
-				"root"          : site_list[key]["root"],
-				"mime-map-file" : mime_type_file,
-				"input-mode"    : "http",
-				"output-mode"   : "http",
-				"range-access"  : undefined,
-				"compressable"      : "text/*,application/*javascript*,application/*xml*,application/*json*"   	
+			    "root"          : site_list[key]["root"],
+			    "mime-map-file" : mime_type_file,
+			    "input-mode"    : "http",
+			    "output-mode"   : "http",
+			    "range-access"  : undefined,
+			    "compressable"      : "text/*,application/*javascript*,application/*xml*,application/*json*"
 			}));
 
-			Service.add_pipe(ret, port, "__error__", "500", "Render");
-			Service.add_pipe(ret, "Parser", port, "request", port);
-			Service.add_pipe(ret, port, "file", "response", "Render");
+				Service.add_pipe(ret, port, "__error__", "500", "Render");
+				Service.add_pipe(ret, "Parser", port, "request", port);
+				Service.add_pipe(ret, port, "file", "response", "Render");
 		}
 		else if(site_list[key]["type"] == "proxy")
 		{

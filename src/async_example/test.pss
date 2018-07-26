@@ -20,8 +20,8 @@ else
 		extractor := "dataflow/extract color"
 		sleep := "sleep "+ type;
 		write := "writesock";
-		() -> "in" read "out" -> "input" extractor "output" -> 
-			  "in" sleep "out" -> "in" write "out" -> ();
+		() -> "in" read "out" -> "input" extractor "output" ->
+		      "in" sleep "out" -> "in" write "out" -> ();
 	};
 
 	Service.start(graph);

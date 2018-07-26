@@ -11,7 +11,7 @@ graph = {
 	extractor := "dataflow/modify color.b color.g"
 	write := "writesock";
 	() -> "in" read {
-		"out"    -> "base" 
+		"out"    -> "base"
 		"bout"   -> "color.b"
 		"bout"   -> "color.g"
 	} extractor "output" -> "in" write "out" -> ();

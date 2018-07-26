@@ -10,7 +10,7 @@ graph = {
 	read  := "readsock";
 	first := "first 3";
 	write := "writesock";
-	
+
 	() -> "in" read {
 		"out0" -> "in0";
 		"out1" -> "in1";

@@ -1,45 +1,45 @@
 /* This is an example for creating and running a dataflow graph in Plumber with PScript
  * In order to run this Graph, we only needs to use the following command
  *     pscript copier.pss
- * This example will read data from stdin and copy the data to the stdout 
+ * This example will read data from stdin and copy the data to the stdout
  */
 
-// Now we are going to use the graph literal to build the copier graph 
+// Now we are going to use the graph literal to build the copier graph
 var copier_graph = {
-    /* Now we will insert a guest code in the graph. 
-     *
-     * In Plumber, a graph literal is described in two parts, node declaration and pipe declaration
-     *
-     * The following code defines the nodes in the graph. In our example, we only needs one node that copies the input to the output
-     *
-     * We will use the standard "firstnonempty" servlet (In Plumber we call guest code servlet) as the node copies the input.
-     *
-     * We can declare the node as following:
-     *
-     *    copy_node := "dataflow/firstnonempty 1";
-     *
-     * This means we want to create a node of servlet/guest code "dataflow/firstnonempty". "dataflow" is the namespace of the guest code.
-     *
-     * "firstnonempty" is a standard component that comes with Plumber distribution. It copies the first non-empty input to its output.
-     * In this case we initialize the servlet with 1 input, so it copies the only input to the output when the input is not empty.
-     */
+	/* Now we will insert a guest code in the graph.
+	 *
+	 * In Plumber, a graph literal is described in two parts, node declaration and pipe declaration
+	 *
+	 * The following code defines the nodes in the graph. In our example, we only needs one node that copies the input to the output
+	 *
+	 * We will use the standard "firstnonempty" servlet (In Plumber we call guest code servlet) as the node copies the input.
+	 *
+	 * We can declare the node as following:
+	 *
+	 *    copy_node := "dataflow/firstnonempty 1";
+	 *
+	 * This means we want to create a node of servlet/guest code "dataflow/firstnonempty". "dataflow" is the namespace of the guest code.
+	 *
+	 * "firstnonempty" is a standard component that comes with Plumber distribution. It copies the first non-empty input to its output.
+	 * In this case we initialize the servlet with 1 input, so it copies the only input to the output when the input is not empty.
+	 */
 
-    copy_node := "dataflow/firstnonempty 1";
+	copy_node := "dataflow/firstnonempty 1";
 
-    /* Now we will define the connection of the dataflow graph.
-     *
-     * A dataflow graph should have a data source and a data sink, in PScript dataflow graph literal, it's represented as `()`
-     * The dataflow edge is denoted as the arrow '->'
-     *
-     * In order to connect the data source to the node input, we can use:
-     *     () -> "port_name" node_name
-     *
-     * Similarly, connecting the node output with the graph data sink, we can use
-     *     "port_name" node_name -> ()
-     *
-     * In our example, we should connect the data source to the copy_node's input and copy_node's output to data sink
-     */
-    () -> "in0" copy_node "out" -> ();
+	/* Now we will define the connection of the dataflow graph.
+	 *
+	 * A dataflow graph should have a data source and a data sink, in PScript dataflow graph literal, it's represented as `()`
+	 * The dataflow edge is denoted as the arrow '->'
+	 *
+	 * In order to connect the data source to the node input, we can use:
+	 *     () -> "port_name" node_name
+	 *
+	 * Similarly, connecting the node output with the graph data sink, we can use
+	 *     "port_name" node_name -> ()
+	 *
+	 * In our example, we should connect the data source to the copy_node's input and copy_node's output to data sink
+	 */
+	() -> "in0" copy_node "out" -> ();
 };
 
 /* Now we need to install the pipe handling modules, which is responsible to actually distribute data, performe IO operations, etc. */

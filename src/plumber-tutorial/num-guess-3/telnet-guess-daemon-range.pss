@@ -4,7 +4,7 @@ insmod("tcp_pipe 54321");
 import("service");
 import("daemon");
 
-// Print some friendly message if the command-line param is missing 
+// Print some friendly message if the command-line param is missing
 if(len(argv) < 2)
 {
 	print("Usage ", argv[0], " <upper-range>");

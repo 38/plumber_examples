@@ -9,30 +9,30 @@ plumber.std.libconf.pyservlet.path = "./py-greeter";
 
 /* This is an example of the subgraph */
 var greeting = {
-    /* Similar to the normal dataflow graph, a subgraph also contains the
-     * edge and node declaration */
-    greet_in_c   := "c-greeter";
-    greet_in_cpp := "cpp-greeter";
-    greet_in_py  := "language/pyservlet py-greeter";
-    greet_in_js  := "language/javascript js-greeter/js-greeter.js";
+	/* Similar to the normal dataflow graph, a subgraph also contains the
+	 * edge and node declaration */
+	greet_in_c   := "c-greeter";
+	greet_in_cpp := "cpp-greeter";
+	greet_in_py  := "language/pyservlet py-greeter";
+	greet_in_js  := "language/javascript js-greeter/js-greeter.js";
 
-    /* However, the subgraph uses the syntax (port_name) to define a named port for the sub graph
-     * The following code takes an input named "input"
-     * and takes an output named "output */
-    (input) -> "input" greet_in_c "output" 
-       -> "input" greet_in_js "output"
-       -> "input" greet_in_cpp "output"
-       -> "input" greet_in_py "output" -> (output);
+	/* However, the subgraph uses the syntax (port_name) to define a named port for the sub graph
+	 * The following code takes an input named "input"
+	 * and takes an output named "output */
+	(input) -> "input" greet_in_c "output"
+	   -> "input" greet_in_js "output"
+	   -> "input" greet_in_cpp "output"
+	   -> "input" greet_in_py "output" -> (output);
 };
 
 /* Once the subgraph is defined, it can be use multiple times */
 var greet_graph = {
 
-    g1 := greeting;
-    g2 := greeting;
-    
-    /* At this point, we actually creates 2 greeting nodes for each language */
-    () -> "input" g1 "output" -> "input" g2 "output" -> ();
+	g1 := greeting;
+	g2 := greeting;
+
+	/* At this point, we actually creates 2 greeting nodes for each language */
+	() -> "input" g1 "output" -> "input" g2 "output" -> ();
 };
 
 import("service");

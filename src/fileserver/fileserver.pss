@@ -22,7 +22,7 @@ options = Options.parse(template, argv);
 
 import("config.pss");
 
-var print_help = function() 
+var print_help = function()
 {
 	print("The Simple Plumber Static Content Server");
 	print("Usage: ", options["program"], " [arguments]");
@@ -53,12 +53,12 @@ if(options["parsed"]["--upgrade-http"] != undefined)
 fileserver = {
 	RequestParser      := "network/http/parser";
 	FileReader         := Servlet.init("filesystem/readfile", {
-		"root"              : server_base_dir,       /* The default directory */
-		"mime-map-file"     : mime_type_file,        /* The MIME type spec, using apache format */
-		"input-mode"        : "http",                /* Takes an HTTP request */
-		"output-mode"       : "http",                /* Produces an HTTP response */
-		"range-access"      : undefined,             /* Allow access a range */
-		"compressable"      : "text/*,application/*javascript*,application/*xml*,application/*json*"   	
+	    "root"              : server_base_dir,       /* The default directory */
+	    "mime-map-file"     : mime_type_file,        /* The MIME type spec, using apache format */
+	    "input-mode"        : "http",                /* Takes an HTTP request */
+	    "output-mode"       : "http",                /* Produces an HTTP response */
+	    "range-access"      : undefined,             /* Allow access a range */
+	    "compressable"      : "text/*,application/*javascript*,application/*xml*,application/*json*"
 	});
 	ResponseGenerator  := "network/http/render --chunked --gzip --deflate";
 

@@ -22,7 +22,7 @@ options = Options.parse(template, argv);
 
 import("config.pss");
 
-var print_help = function() 
+var print_help = function()
 {
 	print("The Simple Plumber Static Content Server");
 	print("Usage: ", options["program"], " [arguments]");

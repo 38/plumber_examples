@@ -6,11 +6,11 @@ runtime.servlet.path += ":./bin";
 
 var adder_graph = {
 
-    parse_node := "input-parser";
-    dump_node  := "typing/conversion/json --to-json --raw input:$T";
+	parse_node := "input-parser";
+	dump_node  := "typing/conversion/json --to-json --raw input:$T";
 
-    () -> "input" parse_node "output"
-       -> "input" dump_node "json" -> ();
+	() -> "input" parse_node "output"
+	   -> "input" dump_node "json" -> ();
 };
 
 import("service");

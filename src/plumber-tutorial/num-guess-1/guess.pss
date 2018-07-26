@@ -1,8 +1,8 @@
-// Install the required basic modules 
+// Install the required basic modules
 insmod("pssm");
 insmod("mem_pipe");
 
-// Install the event accepting module, so that the dataflow graph can accept event from the console and 
+// Install the event accepting module, so that the dataflow graph can accept event from the console and
 // Write the response to the console
 insmod("text_file input=/dev/stdin output=/dev/stdout label=stdio");
 
