@@ -24,7 +24,7 @@ typedef struct {
 
 static int _init(uint32_t argc, char const* const* argv, void* ctxmem)
 {
-	if(argc < 3) 
+	if(argc < 3)
 		ERROR_RETURN_LOG(int, "Invalid servlet init param");
 
 	ctx_t* ctx = (ctx_t*)ctxmem;
@@ -40,7 +40,7 @@ static int _init(uint32_t argc, char const* const* argv, void* ctxmem)
 	PSTD_TYPE_MODEL(type_list)
 	{
 		PSTD_TYPE_MODEL_FIELD(ctx->p_output, host.token, ctx->a_host),
-		PSTD_TYPE_MODEL_FIELD(ctx->p_output, base_url.token, ctx->a_base) 
+		PSTD_TYPE_MODEL_FIELD(ctx->p_output, base_url.token, ctx->a_base)
 	};
 
 	ctx->type_model = PSTD_TYPE_MODEL_BATCH_INIT(type_list);

@@ -53,7 +53,7 @@ static int _on_out_type_inferred(pipe_t pipe, const char* typename, void* ctxbuf
 
 	if(sz != sizeof(uint32_t))
 		ERROR_RETURN_LOG(int, "%s.picked_up should have type uint32", typename);
-	
+
 	if(ERROR_CODE(size_t) == (ctx->output_id_offset = proto_db_type_offset(typename, "picked_id", &sz)))
 		ERROR_RETURN_LOG(int, "Cannot get the offest of %s.picked_id", typename);
 
@@ -67,7 +67,7 @@ static int _on_out_type_inferred(pipe_t pipe, const char* typename, void* ctxbuf
 	if(ctx->output_size < ctx->output_id_offset) ctx->output_size = ctx->output_id_offset;
 	ctx->output_size += sizeof(uint32_t);
 
-	proto_finalize(); 
+	proto_finalize();
 	return 0;
 }
 
@@ -91,7 +91,7 @@ static int _init(uint32_t argc, char const* const* argv, void* ctxbuf)
 		char typebuf[32];
 		snprintf(typebuf, sizeof(typebuf), "$T%u", i);
 		ctx->inputs[i] = pipe_define_pattern("in%u", PIPE_INPUT, typebuf, i);
-		pipe_set_type_callback(ctx->inputs[i], _on_type_inferred, ctxbuf);	
+		pipe_set_type_callback(ctx->inputs[i], _on_type_inferred, ctxbuf);
 	}
 
 	ctx->output = pipe_define("out", PIPE_OUTPUT, "plumber_example/typed_pipe/Value");

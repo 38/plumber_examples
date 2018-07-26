@@ -25,14 +25,14 @@ typedef struct {
 } servlet_data_t;
 int init(uint32_t argc, char const* const* argv, void* data)
 {
-	if(argc < 2) 
+	if(argc < 2)
 		ERROR_RETURN_LOG(int, "Invalid servlet init string, expected: %s <url_prefix>", argv[0]);
 
 	servlet_data_t* sd = (servlet_data_t*)data;
 	sd->raw    = pipe_define("raw", PIPE_INPUT, NULL);
 	sd->parsed = pipe_define("parsed", PIPE_OUTPUT, "plumber/std_servlet/network/http/proxy/v0/Request");
 	sd->error  = pipe_define("error", PIPE_OUTPUT, NULL);
-	
+
 	sd->type_model = pstd_type_model_new();
 	sd->url_acc = pstd_type_model_get_accessor(sd->type_model, sd->parsed, "url.token");
 	sd->method_acc = pstd_type_model_get_accessor(sd->type_model, sd->parsed, "method");
@@ -98,9 +98,9 @@ int _exec(void* data)
 	char* buffer = NULL;
 	_state_t* state;
 	size_t rem = 0, sz = 0;
-	
+
 	pipe_cntl(sd->raw, PIPE_CNTL_POP_STATE, &state);
-	
+
 	int new_state = 0;
 	if(state == NULL)
 	{
@@ -118,12 +118,12 @@ int _exec(void* data)
 		int rc = pipe_data_get_buf(sd->raw, sizeof(_buffer), (void const**)&buffer, &min_sz, &sz);
 		if(ERROR_CODE(int) == rc) goto READ_ERR;
 
-		if(rc == 0) 
+		if(rc == 0)
 		{
 			buffer = _buffer;
 			sz = pipe_read(sd->raw, buffer, sizeof(buffer));
 		}
-		
+
 		if(sz == 0)
 		{
 			if(pipe_eof(sd->raw) > 0)
@@ -183,25 +183,29 @@ READ_ERR:
 				case GET_T: _EXPECT('T', GET_URL_WS);
 				case GET_URL_WS: _WS(URL);
 				case URL: _FILL_BUFFER(ch == ' ' || ch == '\t' || ch == '?', path, GET_PARAM, ch);
-				case GET_PARAM: _SKIP(ch == ' ' || ch == '\t'); state->ps = URL_VER_WS; 
+				case GET_PARAM: _SKIP(ch == ' ' || ch == '\t'); state->ps = URL_VER_WS;
 				case URL_VER_WS: _WS(VER);
 				case VER: _SKIP(ch == '\r');
 				case VER_CR: _EXPECT('\r', VER_LF);
 				case VER_LF: _EXPECT('\n', FIELD);
 				case FIELD:
-				     if(ch == '\r')
-				     {
-					     state->ps = REQUEST_LF;
-					     break;
-				     }
-				     else state->ps = FIELD_NAME;
+				{
+					 if(ch == '\r')
+					 {
+						 state->ps = REQUEST_LF;
+						 break;
+					 }
+					 else state->ps = FIELD_NAME;
+				}
 				case FIELD_NAME:
-				     if(ch < 32)
-				     {
-					     state->ps = ERR;
-					     break;
-				     }
-				     _FILL_BUFFER(ch == ':', field_name, FIELD_NAME_VALUE_SEP, (ch | (0x20 & (ch >> 1))));
+				{
+					 if(ch < 32)
+					 {
+						 state->ps = ERR;
+						 break;
+					 }
+					 _FILL_BUFFER(ch == ':', field_name, FIELD_NAME_VALUE_SEP, (ch | (0x20 & (ch >> 1))));
+				}
 				case FIELD_NAME_VALUE_SEP: _EXPECT(':', FIELD_NAME_VALUE_WS);
 				case FIELD_NAME_VALUE_WS: _WS(FIELD_VLAUE);
 				case FIELD_VLAUE: _FILL_BUFFER(ch == '\r', field_value, FIELD_CR, (ch | (0x20 & (ch >> 1))));
@@ -213,7 +217,7 @@ READ_ERR:
 			if(state->ps == FIELD_LF)
 			{
 				if(strcmp(state->field_name, "connection") == 0  && strcmp(state->field_value, "keep-alive") == 0)
-				    state->keep_alive = 1;
+					state->keep_alive = 1;
 				state->field_name_length = state->field_value_length = 0;
 				state->field_name[0] = state->field_value[0] = 0;
 			}
@@ -221,18 +225,18 @@ READ_ERR:
 		}
 		if(state->ps == OK)
 		{
-		    if(_buffer == buffer && rem + 1 < sz) 
+			if(_buffer == buffer && rem + 1 < sz)
 				pipe_cntl(sd->raw, PIPE_CNTL_EOM, buffer, rem);
-			
+
 			if(_buffer != buffer)
 				pipe_data_release_buf(sd->raw, buffer, rem);
 		}
 		if(state->ps == ERR)
-		    state->keep_alive = 0;
+			state->keep_alive = 0;
 	}
 
 	if(state->keep_alive == 1)
-	    pipe_cntl(sd->raw, PIPE_CNTL_SET_FLAG, PIPE_PERSIST);
+		pipe_cntl(sd->raw, PIPE_CNTL_SET_FLAG, PIPE_PERSIST);
 
 	char itbuf[pstd_type_instance_size(sd->type_model)];
 	pstd_type_instance_t* inst = pstd_type_instance_new(sd->type_model, itbuf);
@@ -248,12 +252,12 @@ READ_ERR:
 		pstd_string_write(url, sd->url_prefix, sd->url_prefix_len);
 		pstd_string_write(url, state->path, state->path_length);
 		scope_token_t st = pstd_string_commit(url);
-		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, sd->url_acc, st); 
+		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, sd->url_acc, st);
 		PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, sd->method_acc, sd->GET_METHOD);
 	}
 
 	if(new_state == 1)
-	    _state_free(state);
+		_state_free(state);
 
 	pstd_type_instance_free(inst);
 

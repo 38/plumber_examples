@@ -41,7 +41,7 @@ static int _exec(void* ctxbuf)
 
 	char ignored[4096];
 	pipe_read(ctx->in, ignored, sizeof(ignored));
-	
+
 	PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, ctx->ar, (float)0.1);
 	PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, ctx->ag, (float)0.2);
 	PSTD_TYPE_INST_WRITE_PRIMITIVE(inst, ctx->ab, (float)0.3);

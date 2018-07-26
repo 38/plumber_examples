@@ -32,16 +32,16 @@ static int _init(uint32_t argc, char const* const* argv, void* ctxbuf)
 	context_t* ctx = (context_t*)ctxbuf;
 
 	if(argc != 2)
-	    ERROR_RETURN_LOG(int, "Usage: %s <sync|async|async_wait>", argv[0]);
+		ERROR_RETURN_LOG(int, "Usage: %s <sync|async|async_wait>", argv[0]);
 
 	const char* mode = argv[1];
-	
+
 	if(strcmp(mode, "sync") == 0) ctx->type = TYPE_SYNC;
 	if(strcmp(mode, "async") == 0) ctx->type = TYPE_ASYNC;
 	if(strcmp(mode, "async_wait") == 0) ctx->type = TYPE_ASYNC_WAIT;
 
 	if(ERROR_CODE(pipe_t) == (ctx->input = pipe_define("in", PIPE_INPUT, "$T")))
-	    ERROR_RETURN_LOG(int, "Cannot define the input pipe");
+		ERROR_RETURN_LOG(int, "Cannot define the input pipe");
 
 	if(ERROR_CODE(pipe_t) == (ctx->output = pipe_define("out", PIPE_MAKE_SHADOW(ctx->input), "$T")))
 		ERROR_RETURN_LOG(int, "Cannot create output pipe");
@@ -105,7 +105,7 @@ static int _async_cleanup(async_handle_t* handle, void* buf, void* ctxbuf)
 	if(ctx->type == TYPE_ASYNC_WAIT)
 		pthread_join(data->thread, NULL);
 
-	
+
 	return 0;
 }
 

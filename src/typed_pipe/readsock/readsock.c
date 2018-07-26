@@ -56,7 +56,7 @@ static int _init(uint32_t argc, char const* const* argv, void* ctxbuf)
 
 	_CHK(ctx->out1_timestamp = proto_db_type_offset("plumber_example/typed_pipe/InputValue2", "timestamp", NULL));
 	_CHK(ctx->out1_value = proto_db_type_offset("plumber_example/typed_pipe/InputValue2", "value", NULL));
-	
+
 	_CHK(ctx->out2_timestamp = proto_db_type_offset("plumber_example/typed_pipe/InputValue3", "timestamp", NULL));
 	_CHK(ctx->out2_value = proto_db_type_offset("plumber_example/typed_pipe/InputValue3", "value", NULL));
 	_CHK(ctx->out2_random = proto_db_type_offset("plumber_example/typed_pipe/InputValue3", "random", NULL));
@@ -95,7 +95,7 @@ static int _process(char ch, pstd_dfa_process_param_t param)
 			break;
 	}
 
-	if(state->lineno == 3) 
+	if(state->lineno == 3)
 		pstd_dfa_done(param.dfa);
 
 	return 0;
