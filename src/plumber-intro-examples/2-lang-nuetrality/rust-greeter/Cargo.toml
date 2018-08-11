@@ -1,0 +1,11 @@
+[package]
+name = "rust-greeter"
+version = "0.1.0"
+authors = ["Hao Hou <haohou302@gmail.com>"]
+
+[dependencies]
+libc = "0.2.0"
+plumber-rs = {git = "https://github.com/38/plumber-rs.git"}
+
+[lib]
+crate-type = ["cdylib"]

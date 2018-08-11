@@ -46,3 +46,6 @@ installed/*
 *.prof
 
 *.psm
+
+Cargo.lock
+**/target/*
