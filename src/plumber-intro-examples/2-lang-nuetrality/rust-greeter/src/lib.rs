@@ -10,7 +10,6 @@ use std::io::{Read, Write};
 /* Import everything we need from the plumber-rs crate */
 use plumber_rs::servlet::{SyncServlet, Unimplemented, ServletMode, ServletFuncResult, Bootstrap, success};
 use plumber_rs::pipe::{Pipe, PIPE_INPUT, PIPE_OUTPUT};
-use plumber_rs::protocol::{TypeModelObject, TypeInstanceObject};
 
 /* Now let's define a type for the servlet */
 struct Greeter {
@@ -21,11 +20,15 @@ struct Greeter {
 /* All the servlet should impelement either async servlet or sync servlet trait, or both 
  * In our case, we only impelemented the sync servlet trait */
 impl SyncServlet for Greeter {
+
+    /* This line defines the servlet doesn't use the typed pipe port */
+    no_protocol!();
+
     /* The initialization function, which is similar to init callback to other languages */
-    fn init(&mut self, _args:&[&str], _m:TypeModelObject) -> ServletFuncResult { success() }
+    fn init(&mut self, _args:&[&str], _m:&mut Self::ProtocolType) -> ServletFuncResult { success() }
 
     /* The execution function, which is the main function of the servlet */
-    fn exec(&mut self, _i:TypeInstanceObject) -> ServletFuncResult 
+    fn exec(&mut self, _i:Self::DataModelType) -> ServletFuncResult 
     {
         let mut line = String::new();
         /* In rust we are able to read/write the pipe just like a file, because Pipe implememnted
