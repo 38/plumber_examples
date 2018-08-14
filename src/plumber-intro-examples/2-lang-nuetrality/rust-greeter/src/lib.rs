@@ -8,7 +8,7 @@ extern crate plumber_rs;
 use std::io::{Read, Write};
 
 /* Import everything we need from the plumber-rs crate */
-use plumber_rs::servlet::{SyncServlet, Unimplemented, ServletMode, ServletFuncResult, Bootstrap, success};
+use plumber_rs::servlet::{SyncServlet, Unimplemented, ServletFuncResult, Bootstrap, BootstrapResult, success};
 use plumber_rs::pipe::{Pipe, PIPE_INPUT, PIPE_OUTPUT};
 
 /* Now let's define a type for the servlet */
@@ -55,13 +55,13 @@ impl Bootstrap for BootstrapType {
 
     /* This function will be called when the servlet get initialized, and it's resposnible
      * to bootstrap the servlet, which means returns the servlet context */
-    fn get(_args:&[&str]) -> Result<ServletMode<Self::AsyncServletType, Self::SyncServletType>, ()>
+    fn get(_args:&[&str]) -> BootstrapResult<Self>
     {
         /* The only thing we should do is returns a new instance of the servlet */
-        return Ok(ServletMode::SyncMode(Greeter {
+        return Self::sync(Greeter {
             input : Pipe::define("input", PIPE_INPUT, None).unwrap(),
             output: Pipe::define("output", PIPE_OUTPUT, None).unwrap()
-        }));
+        });
     }
 }
 
