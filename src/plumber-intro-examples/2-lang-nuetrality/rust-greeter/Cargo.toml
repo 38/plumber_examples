@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Hao Hou <haohou302@gmail.com>"]
 
 [dependencies]
-plumber-rs = {git = "https://github.com/38/plumber-rs.git"}
+plumber-rs = "0.1.2"
 
 [lib]
 crate-type = ["cdylib"]
